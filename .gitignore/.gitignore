@@ -1,4 +1,5 @@
 *.swp
+ft_ls
 
 # Prerequisites
 *.d

@@ -6,11 +6,19 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 20:02:16 by asarandi          #+#    #+#             */
-/*   Updated: 2017/11/28 23:32:03 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/11/29 04:28:04 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ls.h"
+//////////////////
+typedef	struct	s_file
+{
+		char 			*name;
+		struct stat		st;
+		struct s_file	*prev;
+		struct s_file	*next;
+}				t_file;
 
 void	print_entry_type(unsigned long st_mode)
 {
@@ -60,31 +68,27 @@ void print_file_mode(unsigned long st_mode)
 	(void)print_permissions(st_mode);
 }
 
-int	print_extended_attributes(char *filename)
+void	print_extended_attributes(char *path, t_file *file)
 {
 	acl_t	acl;
+	char	*fullpath;
 
-	if ((listxattr(filename, NULL, 0, 0)) > 0)
-		return (write(1, "@", 1));
+	fullpath = ft_strjoin(path, file->name);
+	if ((listxattr(fullpath, NULL, 0, 0)) > 0)
+		write(1, "@", 1);
 	else
 	{
-		acl = acl_get_link_np(filename, ACL_TYPE_EXTENDED);
+		acl = acl_get_link_np(fullpath, ACL_TYPE_EXTENDED);
 		if ( acl != NULL)
 		{
 			acl_free(acl);
-			return (write(1, "+", 1));
+			write(1, "+", 1);
 		}
+		else
+			write(1, " ", 1);
 	}
-	return (0);
+	free(fullpath);
 }
-//////////////////
-typedef	struct	s_file
-{
-		char 			*name;
-		struct stat		st;
-		struct s_file	*prev;
-		struct s_file	*next;
-}				t_file;
 ///////////////////
 void	get_file_stats(char *path, t_file *file)
 {
@@ -161,11 +165,6 @@ int		sort_by_size_asc(t_file *file1, t_file *file2)
 		return (-1);
 }
 
-
-
-
-
-
 void	sort_list(t_file *list, int (f)(t_file *f1, t_file *f2))
 {
 	char		*tmp_name;
@@ -190,46 +189,183 @@ void	sort_list(t_file *list, int (f)(t_file *f1, t_file *f2))
 	}
 }
 
-void	sort_list_by_name_rev(t_file *list)
-{
-	char		*tmp_name;
-	struct stat	tmp_st;
-	t_file		*current;
 
-	current = list;
-	while (current->next != NULL)
+int		check_extended_attributes(char *path, t_file *list)
+{
+	char	*fullpath;
+	acl_t	acl;
+
+	while (list != NULL)
 	{
-		if ((ft_strcmp(current->next->name, current->name)) > 0)
+		fullpath = ft_strjoin(path, list->name);
+		if ((listxattr(fullpath, NULL, 0, 0)) > 0)
+			return (1);
+		acl = acl_get_link_np(fullpath, ACL_TYPE_EXTENDED);
+		if ( acl != NULL)
 		{
-			tmp_name = current->name;
-			current->name = current->next->name;
-			current->next->name = tmp_name;
-			tmp_st = current->st;
-			current->st = current->next->st;
-			current->next->st = tmp_st;
-			current = list;
+			acl_free(acl);
+			return (1);
 		}
-		else
-			current = current->next;
+		free(fullpath);
+		list = list->next;
 	}
+	return (0);
+}
+
+int	count_digits(unsigned long long	n)
+{
+	int	digits;
+
+	if (n == 0)
+		return (1);
+	digits = 0;
+	while (n)
+	{
+		digits++;
+		n /= 10;
+	}
+	return (digits);
+}
+
+nlink_t	max_hard_links(t_file *list)
+{
+	nlink_t	max;
+
+	max = 0;
+	while (list != NULL)
+	{
+		if (list->st.st_nlink > max)
+			max = list->st.st_nlink;
+		list = list->next;
+	}
+	return (max);
+}
+
+off_t	max_file_size(t_file *list)
+{
+	off_t	max;
+
+	max = 0;
+	while (list != NULL)
+	{
+		if (list->st.st_size > max)
+			max = list->st.st_size;
+		list = list->next;
+	}
+	return (max);
+}
+
+int	max_length_str_owner(t_file *list)
+{
+	int				k;
+	int				max;
+	struct passwd	*pwd;
+
+	max = 0;
+	while (list != NULL)
+	{
+		pwd = getpwuid(list->st.st_uid);
+		if (pwd != NULL)
+		{
+			k = ft_strlen(pwd->pw_name);
+			if (k > max)
+				max = k;
+		}
+		list = list->next;
+	}
+	return (max);
+}
+
+int	max_length_str_group(t_file *list)
+{
+	int				k;
+	int				max;
+	struct group	*grp;
+
+	max = 0;
+	while (list != NULL)
+	{
+		grp = getgrgid(list->st.st_gid);
+		if (grp != NULL)
+		{
+			k = ft_strlen(grp->gr_name);
+			if (k > max)
+				max = k;
+		}
+		list = list->next;
+	}
+	return (max);
+}
+
+blkcnt_t	count_blocks(t_file *list)
+{
+	blkcnt_t	total;
+
+	total = 0;
+	while (list != NULL)
+	{
+		total += list->st.st_blocks;
+		list = list->next;
+	}
+	return (total);
+}
+
+//           v       v
+//0123456789abcdef01234567
+//Thu Nov 24 18:22:48 1986\n\0
+char	*make_time_string(struct timespec ts)
+{
+	time_t	now;
+	char	*result;
+	int		i;
+
+	now = time(&now);
+	result = ctime(&ts.tv_sec);
+	if ((ts.tv_sec + ((365 / 2) * 86400) < now) ||
+			(now + ((365 / 2) * 86400) < ts.tv_sec))
+	{
+		i = 0;
+		while (i < 5)
+		{
+			result[11 + i] = result[19 + i];
+			i++;
+		}
+	}
+	return (&result[4]);
 }
 
 
-
-
-
-
-
-
-void	print_list(t_file *list)
+void	print_list(char *path, t_file *list)
 {
+	int				links_width;
+	int				owner_width;
+	int				group_width;
+	int				size_width;
+	struct passwd	*pwd;
+	struct group	*grp;
+
+	ft_printf("total %llu\n", count_blocks(list));
+	links_width = count_digits(max_hard_links(list));
+	owner_width = max_length_str_owner(list);
+	group_width = max_length_str_group(list);
+	size_width = count_digits(max_file_size(list));
 	while (list != NULL)
 	{
-		ft_printf("%s\n", list->name);
+		print_file_mode(list->st.st_mode);
+		print_extended_attributes(path, list);
+		ft_printf("%*d", links_width + 1, list->st.st_nlink);
+		pwd = getpwuid(list->st.st_uid);
+		if (pwd != NULL)
+			ft_printf(" %-*s", owner_width + 1, pwd->pw_name);
+		grp = getgrgid(list->st.st_gid);
+		if (grp != NULL)
+			ft_printf(" %-*s", group_width + 1, grp->gr_name);
+		ft_printf("%*llu", size_width + 1, list->st.st_size);
+		ft_printf(" %.12s", make_time_string(list->st.st_mtimespec));
+		ft_printf(" %s\n", list->name);
 		list = list->next;
 	}
 }
-
 /////////////////
 int	main(int ac, char **av)
 {
@@ -250,19 +386,16 @@ int	main(int ac, char **av)
 	}
 
 	list = create_list(path);
-	print_list(list);
+//	print_list(path, list);
 	sort_list(list, sort_by_name_asc);
-	ft_printf("............................\n");
-	print_list(list);
-	sort_list(list, sort_by_name_desc);
-	ft_printf("............................\n");
-	print_list(list);
-
-	sort_list(list, sort_by_size_asc);
-	ft_printf("............................\n");
-	print_list(list);
-
-
+//	ft_printf("............................\n");
+	print_list(path, list);
+//	sort_list(list, sort_by_name_desc);
+//	ft_printf("............................\n");
+//	print_list(path, list);
+//	sort_list(list, sort_by_size_asc);
+//	ft_printf("............................\n");
+//	print_list(path, list);
 
 	destroy_list(list);
 	return (0);

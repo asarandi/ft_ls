@@ -22,7 +22,11 @@
 
 
 --
+
+-- check if user is looking up a directory or file
+
 if no file/directory name is given, ls parses current "." directory
+
 
     struct stat { /* when _DARWIN_FEATURE_64_BIT_INODE is defined */
          dev_t           st_dev;           /* ID of device containing file */

@@ -6,7 +6,7 @@
 #    By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/11/26 20:09:21 by asarandi          #+#    #+#              #
-#    Updated: 2017/11/27 01:55:34 by asarandi         ###   ########.fr        #
+#    Updated: 2017/11/27 20:36:55 by asarandi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,7 +15,7 @@ CC		= gcc
 CFLAGS	= -Wall -Werror -Wextra
 SRC		= $(wildcard *.c)
 OBJ		= $(SRC:%.c=%.o)
-LIB		= -Llibft -lft -Llibft/ft_printf -lftprintf
+LIB		= -Llibft -lft -Llibft/ft_printf -lftprintf -lc
 
 all: $(NAME)
 

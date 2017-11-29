@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 20:05:13 by asarandi          #+#    #+#             */
-/*   Updated: 2017/11/26 22:49:13 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/11/27 20:57:58 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,5 +30,6 @@
 # include <errno.h>
 # include "libft/libft.h"
 # include "libft/ft_printf/libftprintf.h"
+# include <sys/acl.h> //acl_get_file(), acl_free()
 
 #endif

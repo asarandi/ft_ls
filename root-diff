@@ -1,0 +1,12 @@
+22c22
+< lrwxr-xr-x   1 root      wheel            11 Jul  3  2016 etc
+---
+> lrwxr-xr-x@  1 root      wheel            11 Jul  3  2016 etc -> private/etc
+33c33
+< lrwxr-xr-x   1 root      wheel            11 Jul  3  2016 tmp
+---
+> lrwxr-xr-x@  1 root      wheel            11 Jul  3  2016 tmp -> private/tmp
+35c35
+< lrwxr-xr-x   1 root      wheel            11 Jul  3  2016 var
+---
+> lrwxr-xr-x@  1 root      wheel            11 Jul  3  2016 var -> private/var

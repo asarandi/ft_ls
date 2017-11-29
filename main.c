@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 20:02:16 by asarandi          #+#    #+#             */
-/*   Updated: 2017/11/28 18:32:48 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/11/28 23:32:03 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,78 +77,194 @@ int	print_extended_attributes(char *filename)
 	}
 	return (0);
 }
+//////////////////
+typedef	struct	s_file
+{
+		char 			*name;
+		struct stat		st;
+		struct s_file	*prev;
+		struct s_file	*next;
+}				t_file;
+///////////////////
+void	get_file_stats(char *path, t_file *file)
+{
+	char	*fullpath;
 
-
-int	main(int ac, char **av)
+	fullpath = ft_strjoin(path, file->name);
+	(void)lstat(fullpath, &file->st);
+	free(fullpath);
+}
+/////////////////
+t_file	*create_list(char *path)
 {
 	DIR				*dirp;
-	struct	dirent	*dp;
-	struct	stat	st;
-	struct	passwd	*pw;
-	struct	group	*gr;
+	struct dirent	*dp;
+	t_file			*first;
+	t_file			*index;
+	t_file			*new;
 
-	char	*path;
-	if ((ac > 1) && (av[1]))
-		path = av[1];
-	else
-		path = ".";
-
+	first = NULL;
 	if ((dirp = opendir(path)) == NULL)
-		return (ft_printf("ft_ls: %s: %s\n", path, strerror(errno)));
+		return (NULL);
 	while ((dp = readdir(dirp)) != NULL)
 	{
-/*
- 		ft_printf("dp->d_fileno: %llu\n", dp->d_fileno);
-		ft_printf("dp->d_seekoff: %llu\n", dp->d_seekoff);
-		ft_printf("dp->d_reclen: %hu\n", dp->d_reclen);
-		ft_printf("dp->d_namlen: %hu\n", dp->d_namlen);
-		ft_printf("dp->d_type: %hhu\n", dp->d_type);
-		ft_printf("dp->d_name: %s\n\n", dp->d_name);
-*/	
-
-		int	len = ft_strlen(path);
-		char *tmpname;
-		char *newname;
-		if (path[len - 1] != '/')
+		new = (t_file*)ft_memalloc(sizeof(t_file));
+		new->name = ft_strdup(dp->d_name);
+		get_file_stats(path, new);
+		if (first == NULL)
 		{
-			tmpname = ft_strjoin(path, "/");
-			newname = ft_strjoin(tmpname, dp->d_name);
-			free(tmpname);
+			first = new;
+			index = first;
 		}
 		else
-			newname = ft_strjoin(path, dp->d_name);
-
-		if (lstat(newname, &st) != -1)
 		{
-			print_file_mode(st.st_mode);
-			print_extended_attributes(newname);
-			ft_printf(" % 3d", st.st_nlink);
-/*
-** the number of hard links has to be printed with width specifies
-** must be aligned to the right
-**    1
-**   12
-**  372
-**  must leave 2 spaces after rightmost permissions/ext-attr character
-*/
-			if ((pw = getpwuid(st.st_uid)) != NULL)
-				ft_printf(" %s", pw->pw_name);
-			if ((gr = getgrgid(st.st_gid)) != NULL)
-				ft_printf("  %s", gr->gr_name);
-			ft_printf("  % 5lu", st.st_size);  /////////// width padding to the right
-//			long last_mod;
-//		   	last_mod = st.st_mtimespec.tv_sec;
-			char *time = ctime(&st.st_mtimespec.tv_sec);
-			ft_printf(" %.12s", &(time)[4]);
+			index->next = new;
+			index = index->next;
+		}
+	}
+	index->next = NULL;
+	closedir(dirp);
+	return (first);
+}
 
+void	destroy_list(t_file *list)
+{
+	t_file	*next;
+
+	while (1)
+	{
+		next = list->next;
+		free(list->name);
+		free(list);
+		if (next == NULL)
+			break ;
+		list = next;
+	}
+	return ;
+}
+
+int		sort_by_name_asc(t_file *file1, t_file *file2)
+{
+	return (ft_strcmp(file1->name, file2->name));
+}
+
+int		sort_by_name_desc(t_file *file1, t_file *file2)
+{
+	return (ft_strcmp(file2->name, file1->name));
+}
+
+int		sort_by_size_asc(t_file *file1, t_file *file2)
+{
+	if (file1->st.st_size > file2->st.st_size)
+		return (1);
+	else
+		return (-1);
+}
+
+
+
+
+
+
+void	sort_list(t_file *list, int (f)(t_file *f1, t_file *f2))
+{
+	char		*tmp_name;
+	struct stat	tmp_st;
+	t_file		*current;
+
+	current = list;
+	while (current->next != NULL)
+	{
+		if ((f(current, current->next)) > 0)
+		{
+			tmp_name = current->name;
+			current->name = current->next->name;
+			current->next->name = tmp_name;
+			tmp_st = current->st;
+			current->st = current->next->st;
+			current->next->st = tmp_st;
+			current = list;
 		}
 		else
-			ft_printf("ft_ls: %s: %s\n", dp->d_name, strerror(errno));
-		ft_printf(" %s\n", dp->d_name);
+			current = current->next;
+	}
+}
 
-		free(newname);
+void	sort_list_by_name_rev(t_file *list)
+{
+	char		*tmp_name;
+	struct stat	tmp_st;
+	t_file		*current;
+
+	current = list;
+	while (current->next != NULL)
+	{
+		if ((ft_strcmp(current->next->name, current->name)) > 0)
+		{
+			tmp_name = current->name;
+			current->name = current->next->name;
+			current->next->name = tmp_name;
+			tmp_st = current->st;
+			current->st = current->next->st;
+			current->next->st = tmp_st;
+			current = list;
+		}
+		else
+			current = current->next;
+	}
+}
+
+
+
+
+
+
+
+
+void	print_list(t_file *list)
+{
+	while (list != NULL)
+	{
+		ft_printf("%s\n", list->name);
+		list = list->next;
+	}
+}
+
+/////////////////
+int	main(int ac, char **av)
+{
+	char	*path;
+	char	*tmp;
+	t_file	*list;
+
+	if ((ac > 1) && (av[1]))
+		path = ft_strdup(av[1]);
+	else
+		path = ft_strdup(".");
+
+	if (path[ft_strlen(path) - 1] != '/')
+	{
+		tmp = ft_strjoin(path, "/");
+		free(path);
+		path = tmp;
 	}
 
-	closedir(dirp); //returns 0 on success, -1 on failure
+	list = create_list(path);
+	print_list(list);
+	sort_list(list, sort_by_name_asc);
+	ft_printf("............................\n");
+	print_list(list);
+	sort_list(list, sort_by_name_desc);
+	ft_printf("............................\n");
+	print_list(list);
 
+	sort_list(list, sort_by_size_asc);
+	ft_printf("............................\n");
+	print_list(list);
+
+
+
+	destroy_list(list);
+	return (0);
+	
 }

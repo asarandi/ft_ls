@@ -20,6 +20,11 @@
      -d      Directories are listed as plain files (not searched recursively).
 
 
+--
+tests: lots of symlinks in: /usr/lib/
+
+tests: make sure output is aligned when command line arguments are multiple files
+
 
 --
 

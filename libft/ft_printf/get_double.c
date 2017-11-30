@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/10 15:01:00 by asarandi          #+#    #+#             */
-/*   Updated: 2017/11/12 17:37:11 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/11/30 01:20:44 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ int		double_check_nan(double *d, t_placeholder *ph)
 		(*ph).char_count = 3;
 		return (1);
 	}
-	if ((*d == (double)1 / 0) || (*d == (double)-1 / 0))
+	if ((*d == (double)1 / (double)0) || (*d == (double)-1 / (double)0))
 	{
 		(*ph).float_suffix = ft_strdup("inf");
 		(*ph).float_prefix = ft_memalloc(1);

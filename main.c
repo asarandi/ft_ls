@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 20:02:16 by asarandi          #+#    #+#             */
-/*   Updated: 2017/11/29 04:28:04 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/11/30 06:43:23 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ void	print_extended_attributes(char *path, t_file *file)
 	char	*fullpath;
 
 	fullpath = ft_strjoin(path, file->name);
-	if ((listxattr(fullpath, NULL, 0, 0)) > 0)
+	if ((listxattr(fullpath, NULL, 0, XATTR_NOFOLLOW)) > 0)
 		write(1, "@", 1);
 	else
 	{
@@ -297,6 +297,56 @@ int	max_length_str_group(t_file *list)
 	return (max);
 }
 
+int	directory_has_charblocks(t_file *list)
+{
+	while (list != NULL)
+	{
+		if ((S_ISCHR(list->st.st_mode)) ||	
+				(S_ISBLK(list->st.st_mode)))
+		{
+			return (1);
+		}
+		list = list->next;
+	}
+	return (0);
+}
+
+int	charblocks_major_max(t_file *list)
+{
+	int	max;
+
+	max = 0;
+	while (list != NULL)
+	{
+		if ((S_ISCHR(list->st.st_mode)) ||	
+				(S_ISBLK(list->st.st_mode)))
+		{
+			if (major(list->st.st_rdev) > max)
+				max = major(list->st.st_rdev);
+		}
+		list = list->next;
+	}
+	return (max);
+}
+
+int	charblocks_minor_max(t_file *list)
+{
+	int	max;
+
+	max = 0;
+	while (list != NULL)
+	{
+		if ((S_ISCHR(list->st.st_mode)) ||	
+				(S_ISBLK(list->st.st_mode)))
+		{
+			if (minor(list->st.st_rdev) > max)
+				max = minor(list->st.st_rdev);
+		}
+		list = list->next;
+	}
+	return (max);
+}
+
 blkcnt_t	count_blocks(t_file *list)
 {
 	blkcnt_t	total;
@@ -334,6 +384,29 @@ char	*make_time_string(struct timespec ts)
 	return (&result[4]);
 }
 
+char	*get_symlink_address(char *path, t_file *list)
+{
+	char	*symlink;
+	char	*fullpath;
+
+	if ((fullpath = ft_strjoin(path, list->name)) == NULL)
+		return (NULL);
+	if ((symlink = ft_memalloc(1024)) == NULL)
+	{
+		free(fullpath);
+		return (NULL);
+	}
+	if ((readlink(fullpath, symlink, 1024)) == -1)
+	{
+		free(symlink);
+		free(fullpath);
+		return (NULL);
+	}
+	free(fullpath);
+	return (symlink);
+}
+
+
 
 void	print_list(char *path, t_file *list)
 {
@@ -343,35 +416,91 @@ void	print_list(char *path, t_file *list)
 	int				size_width;
 	struct passwd	*pwd;
 	struct group	*grp;
+	char			*symlink;
+	int				has_cb;
+	int				cbmaj_width;
+	int				cbmin_width;
 
 	ft_printf("total %llu\n", count_blocks(list));
 	links_width = count_digits(max_hard_links(list));
 	owner_width = max_length_str_owner(list);
 	group_width = max_length_str_group(list);
 	size_width = count_digits(max_file_size(list));
+	has_cb = directory_has_charblocks(list);
+	if (has_cb)
+	{
+		cbmaj_width = count_digits(charblocks_major_max(list));
+		cbmin_width = count_digits(charblocks_minor_max(list));
+		while (size_width > cbmaj_width + 3 + cbmin_width)
+			cbmaj_width++;
+
+	}
+
 	while (list != NULL)
 	{
 		print_file_mode(list->st.st_mode);
 		print_extended_attributes(path, list);
-		ft_printf("%*d", links_width + 1, list->st.st_nlink);
+		ft_printf(" %*u ", links_width, list->st.st_nlink);
 		pwd = getpwuid(list->st.st_uid);
 		if (pwd != NULL)
-			ft_printf(" %-*s", owner_width + 1, pwd->pw_name);
+			ft_printf("%-*s  ", owner_width, pwd->pw_name);
 		grp = getgrgid(list->st.st_gid);
 		if (grp != NULL)
-			ft_printf(" %-*s", group_width + 1, grp->gr_name);
-		ft_printf("%*llu", size_width + 1, list->st.st_size);
+			ft_printf("%-*s  ", group_width, grp->gr_name);
+
+		if (has_cb)
+		{
+			if ((S_ISCHR(list->st.st_mode)) || (S_ISBLK(list->st.st_mode)))
+				ft_printf("%3d, %3d", major(list->st.st_rdev), minor(list->st.st_rdev));
+			else
+				ft_printf("%*llu", 8, list->st.st_size);
+		}
+		else
+			ft_printf("%*llu", size_width + 1, list->st.st_size);
 		ft_printf(" %.12s", make_time_string(list->st.st_mtimespec));
-		ft_printf(" %s\n", list->name);
+		ft_printf(" %s", list->name);
+		if (S_ISLNK(list->st.st_mode))
+		{
+			symlink = get_symlink_address(path, list);
+			if (symlink != NULL)
+			{
+				ft_printf(" -> %s", symlink);
+				free(symlink);
+			}
+		}
+		ft_printf("\n");
 		list = list->next;
 	}
 }
+
+
+void	list_directory(char *path)
+{
+	t_file	*list;
+
+	list = create_list(path);
+	sort_list(list, sort_by_name_asc);
+	print_list(path, list);
+	destroy_list(list);
+}
+
+int	is_directory(char *path)
+{
+	DIR	*dirp;
+
+	if ((dirp = opendir(path)) != NULL)
+	{
+		closedir(dirp);
+		return (1);
+	}
+	return (0);
+}
+
 /////////////////
 int	main(int ac, char **av)
 {
 	char	*path;
 	char	*tmp;
-	t_file	*list;
 
 	if ((ac > 1) && (av[1]))
 		path = ft_strdup(av[1]);
@@ -384,20 +513,9 @@ int	main(int ac, char **av)
 		free(path);
 		path = tmp;
 	}
+	if (is_directory(path))
+		list_directory(path);
 
-	list = create_list(path);
-//	print_list(path, list);
-	sort_list(list, sort_by_name_asc);
-//	ft_printf("............................\n");
-	print_list(path, list);
-//	sort_list(list, sort_by_name_desc);
-//	ft_printf("............................\n");
-//	print_list(path, list);
-//	sort_list(list, sort_by_size_asc);
-//	ft_printf("............................\n");
-//	print_list(path, list);
-
-	destroy_list(list);
 	return (0);
 	
 }

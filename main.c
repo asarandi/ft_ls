@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 20:02:16 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/01 02:06:06 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/01 02:35:33 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -136,15 +136,20 @@ int	is_allowed(char *fn)
 	int	allowed;
 
 	allowed = 1;
-	if ((g_opt.show_dot == 0) && (fn[0] == '.'))
+	if (fn[0] == '.')
+	{	
 		allowed = 0;
-	if ((g_opt.show_hidden == 1) && (fn[0] == '.'))
-	{
-		allowed = 1;
-		if ((ft_strcmp(fn, ".")) == 0)
-			allowed = 0;
-		else if ((ft_strcmp(fn, "..")) == 0)
-			allowed = 0;
+		if (g_opt.show_hidden == 1)
+		{
+			if ((ft_strcmp(fn, ".")) == 0)
+				allowed = 0;
+			else if ((ft_strcmp(fn, "..")) == 0)
+				allowed = 0;
+			else
+				allowed = 1;
+		}
+		if (g_opt.show_dot == 1)
+			allowed = 1;
 	}
 	return (allowed);
 }

@@ -6,12 +6,40 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 20:02:16 by asarandi          #+#    #+#             */
-/*   Updated: 2017/11/30 06:43:23 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/01 02:06:06 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ls.h"
 //////////////////
+
+char	*g_ls_name;
+
+typedef	struct	list_options {
+	int	long_list;		// -l
+	int	recursive;		// -R
+	int	reverse;		// -r
+	int show_dot;		// -a
+	int show_hidden;	// -A
+	int sort; 			//     (0) by name,
+						// -t  (1) by time mod,
+						// -u  (2) by time access,
+						// -U  (3) by time created,
+						// -S  (4) by size
+						// -f (-1) no sort
+	
+	int colors;			// -G
+	int hide_owner;		// -g -- turns on l
+	int hide_group; 	// -o -- turn on l
+	int show_acl;		// -e -- when used with l
+	int	show_extattr;	// -@ -- when used with l
+	int plain;			// -d
+	int last_opt;		// where options end and arguments start
+
+} t_options;
+
+t_options	g_opt;
+
 typedef	struct	s_file
 {
 		char 			*name;
@@ -90,15 +118,38 @@ void	print_extended_attributes(char *path, t_file *file)
 	free(fullpath);
 }
 ///////////////////
-void	get_file_stats(char *path, t_file *file)
+int	get_file_stats(char *path, t_file *file)
 {
 	char	*fullpath;
+	int		result;
 
 	fullpath = ft_strjoin(path, file->name);
-	(void)lstat(fullpath, &file->st);
+	result = lstat(fullpath, &file->st);
 	free(fullpath);
+	if (result == -1)
+		ft_printf(2, "%s: %s: %s\n", g_ls_name, file->name, strerror(errno));
+	return (result);
 }
 /////////////////
+int	is_allowed(char *fn)
+{
+	int	allowed;
+
+	allowed = 1;
+	if ((g_opt.show_dot == 0) && (fn[0] == '.'))
+		allowed = 0;
+	if ((g_opt.show_hidden == 1) && (fn[0] == '.'))
+	{
+		allowed = 1;
+		if ((ft_strcmp(fn, ".")) == 0)
+			allowed = 0;
+		else if ((ft_strcmp(fn, "..")) == 0)
+			allowed = 0;
+	}
+	return (allowed);
+}
+
+
 t_file	*create_list(char *path)
 {
 	DIR				*dirp;
@@ -112,18 +163,21 @@ t_file	*create_list(char *path)
 		return (NULL);
 	while ((dp = readdir(dirp)) != NULL)
 	{
-		new = (t_file*)ft_memalloc(sizeof(t_file));
-		new->name = ft_strdup(dp->d_name);
-		get_file_stats(path, new);
-		if (first == NULL)
+		if ((is_allowed(dp->d_name)) == 1)
 		{
-			first = new;
-			index = first;
-		}
-		else
-		{
-			index->next = new;
-			index = index->next;
+			new = (t_file*)ft_memalloc(sizeof(t_file));
+			new->name = ft_strdup(dp->d_name);
+			get_file_stats(path, new);
+			if (first == NULL)
+			{
+				first = new;
+				index = first;
+			}
+			else
+			{
+				index->next = new;
+				index = index->next;
+			}
 		}
 	}
 	index->next = NULL;
@@ -391,12 +445,12 @@ char	*get_symlink_address(char *path, t_file *list)
 
 	if ((fullpath = ft_strjoin(path, list->name)) == NULL)
 		return (NULL);
-	if ((symlink = ft_memalloc(1024)) == NULL)
+	if ((symlink = ft_memalloc(PATH_MAX)) == NULL)
 	{
 		free(fullpath);
 		return (NULL);
 	}
-	if ((readlink(fullpath, symlink, 1024)) == -1)
+	if ((readlink(fullpath, symlink, PATH_MAX)) == -1)
 	{
 		free(symlink);
 		free(fullpath);
@@ -418,104 +472,333 @@ void	print_list(char *path, t_file *list)
 	struct group	*grp;
 	char			*symlink;
 	int				has_cb;
-	int				cbmaj_width;
-	int				cbmin_width;
 
-	ft_printf("total %llu\n", count_blocks(list));
+	if (*path)
+		ft_printf(1, "total %llu\n", count_blocks(list));
 	links_width = count_digits(max_hard_links(list));
 	owner_width = max_length_str_owner(list);
 	group_width = max_length_str_group(list);
 	size_width = count_digits(max_file_size(list));
 	has_cb = directory_has_charblocks(list);
-	if (has_cb)
-	{
-		cbmaj_width = count_digits(charblocks_major_max(list));
-		cbmin_width = count_digits(charblocks_minor_max(list));
-		while (size_width > cbmaj_width + 3 + cbmin_width)
-			cbmaj_width++;
-
-	}
 
 	while (list != NULL)
 	{
 		print_file_mode(list->st.st_mode);
 		print_extended_attributes(path, list);
-		ft_printf(" %*u ", links_width, list->st.st_nlink);
+		ft_printf(1, " %*u ", links_width, list->st.st_nlink);
 		pwd = getpwuid(list->st.st_uid);
 		if (pwd != NULL)
-			ft_printf("%-*s  ", owner_width, pwd->pw_name);
+			ft_printf(1, "%-*s  ", owner_width, pwd->pw_name);
 		grp = getgrgid(list->st.st_gid);
 		if (grp != NULL)
-			ft_printf("%-*s  ", group_width, grp->gr_name);
-
+			ft_printf(1, "%-*s  ", group_width, grp->gr_name);
 		if (has_cb)
 		{
 			if ((S_ISCHR(list->st.st_mode)) || (S_ISBLK(list->st.st_mode)))
-				ft_printf("%3d, %3d", major(list->st.st_rdev), minor(list->st.st_rdev));
+			{
+				ft_printf(1, "%3d, ", major(list->st.st_rdev));
+				if ((minor(list->st.st_rdev) > 255) || (minor(list->st.st_rdev) < 0))
+					ft_printf(1, "0x%08x ", minor(list->st.st_rdev));
+				else
+					ft_printf(1, "%3d ", minor(list->st.st_rdev));
+			}
 			else
-				ft_printf("%*llu", 8, list->st.st_size);
+				ft_printf(1, "%*s%*llu ", 8 - size_width, "", size_width, list->st.st_size);
 		}
 		else
-			ft_printf("%*llu", size_width + 1, list->st.st_size);
-		ft_printf(" %.12s", make_time_string(list->st.st_mtimespec));
-		ft_printf(" %s", list->name);
+			ft_printf(1, "%*llu ", size_width, list->st.st_size);
+		ft_printf(1, "%.12s ", make_time_string(list->st.st_mtimespec));
+		ft_printf(1, "%s", list->name);
 		if (S_ISLNK(list->st.st_mode))
 		{
 			symlink = get_symlink_address(path, list);
 			if (symlink != NULL)
 			{
-				ft_printf(" -> %s", symlink);
+				ft_printf(1, " -> %s", symlink);
 				free(symlink);
 			}
 		}
-		ft_printf("\n");
+		ft_printf(1, "\n");
 		list = list->next;
 	}
 }
 
+char	*directory_add_slash(char *path)
+{
+	int	len;
+	char *tmp;
+
+	len = ft_strlen(path);
+
+	if ((*path) && (path[len - 1] != '/'))
+	{
+		tmp = ft_strjoin(path, "/");
+		free(path);
+		path = tmp;
+	}
+	return (path);
+}
 
 void	list_directory(char *path)
 {
 	t_file	*list;
 
 	list = create_list(path);
-	sort_list(list, sort_by_name_asc);
-	print_list(path, list);
-	destroy_list(list);
+	if (list != NULL)
+	{
+		sort_list(list, sort_by_name_asc);
+		print_list(path, list);
+		destroy_list(list);
+	}
+	else
+		ft_printf(2, "%s: %s: %s\n", g_ls_name, path, strerror(errno));
+		
 }
 
 int	is_directory(char *path)
 {
-	DIR	*dirp;
+	struct	stat st;
 
-	if ((dirp = opendir(path)) != NULL)
+	lstat(path, &st);
+	if (S_ISDIR(st.st_mode))
+		return (1);
+	else
+		return (0);
+}
+
+void	illegal_option(char c)
+{
+	ft_printf(2, "%s: illegal option -- %c\n", g_ls_name, c);
+	ft_printf(2, "usage: ls [-AadefGgloRrStUu@] [file ...]\n");
+	exit(0);
+}
+
+void	clear_options()
+{
+	g_opt.long_list = 0;
+	g_opt.recursive = 0;
+	g_opt.reverse = 0;
+	g_opt.show_dot = 0;
+	g_opt.show_hidden = 0;
+	g_opt.sort = 0;
+	g_opt.colors = 0;
+	g_opt.hide_owner = 0;
+	g_opt.hide_group = 0;
+	g_opt.show_acl = 0;
+	g_opt.show_extattr = 0;
+	g_opt.plain = 0;
+	g_opt.last_opt = 1;
+}
+
+void parse_options(int ac, char **av)
+{
+	int			i;
+	int			k;
+
+	g_opt.last_opt = 1;
+	(void)clear_options();
+	i = 1;
+	while (i < ac)
 	{
-		closedir(dirp);
+		while ((av[i]) && (av[i][0] == '-'))
+		{
+			if ((av[i][1] == '-') && (av[i][2] == 0))
+			{
+				g_opt.last_opt = ++i;
+				return ;
+			}
+			k = 1;
+			while (av[i][k])
+			{
+				if (av[i][k] == 'l')
+					g_opt.long_list = 1;
+				else if (av[i][k] == 'R')
+					g_opt.recursive = 1;
+				else if (av[i][k] == 'r')
+					g_opt.reverse = 1;
+				else if (av[i][k] == 'a')
+					g_opt.show_dot = 1;
+				else if (av[i][k] == 'A')
+					g_opt.show_hidden = 1;
+				else if (av[i][k] == 't')
+					g_opt.sort = 1;
+				else if (av[i][k] == 'u')
+					g_opt.sort = 2;
+				else if (av[i][k] == 'U')
+					g_opt.sort = 3;
+				else if (av[i][k] == 'S')
+					g_opt.sort = 4;
+				else if (av[i][k] == 'f')
+					g_opt.sort = -1;
+				else if (av[i][k] == 'G')
+					g_opt.colors = 1;
+				else if (av[i][k] == 'g')
+				{
+					g_opt.hide_owner = 1;
+					g_opt.long_list = 1;
+				}
+				else if (av[i][k] == 'o')
+				{
+					g_opt.hide_group = 1;
+					g_opt.long_list = 1;
+				}
+				else if (av[i][k] == 'e')
+					g_opt.show_acl = 1;
+				else if (av[i][k] == '@')
+					g_opt.show_extattr = 1;
+				else if (av[i][k] == 'd')
+					g_opt.plain = 1;
+				else
+					(void)illegal_option(av[i][k]);
+				k++;
+			}
+			i++;
+			g_opt.last_opt = i;
+		}
+		return ;
+	}
+	return ;
+}
+
+// add error handling in get_file_stats
+
+t_file *build_file_list(int ac, char **av)
+{
+	int	i;
+	t_file			*first;
+	t_file			*index;
+	t_file			*new;
+
+	i = g_opt.last_opt;
+	first = NULL;
+	while (i < ac)
+	{
+		if (is_directory(av[i]) == 0)
+		{
+			new = (t_file*)ft_memalloc(sizeof(t_file));
+			new->name = ft_strdup(av[i]);
+			if (get_file_stats("", new) == 0)
+			{
+				if (first == NULL)
+				{
+					first = new;
+					index = first;
+				}
+				else
+				{
+					index->next = new;
+					index = index->next;
+				}
+			}
+			else
+			{
+				free(new->name);
+				free(new);
+			}
+		}
+		i++;
+	}
+	return (first);
+}
+
+t_file *build_directory_list(int ac, char **av)
+{
+	int	i;
+	t_file			*first;
+	t_file			*index;
+	t_file			*new;
+
+	i = g_opt.last_opt;
+	first = NULL;
+	while (i < ac)
+	{
+		if (is_directory(av[i]) == 1)
+		{
+			new = (t_file*)ft_memalloc(sizeof(t_file));
+			new->name = ft_strdup(av[i]);
+			get_file_stats("", new);
+			if (first == NULL)
+			{
+				first = new;
+				index = first;
+			}
+			else
+			{
+				index->next = new;
+				index = index->next;
+			}
+		}
+		i++;
+	}
+	return (first);
+}
+
+
+//display_file_list
+
+
+int	display_files(int ac, char **av)
+{
+	t_file	*list;
+
+	list = build_file_list(ac, av);
+	if (list != NULL)
+	{
+		sort_list(list, sort_by_name_asc);
+		print_list("", list);
+		destroy_list(list);
 		return (1);
 	}
 	return (0);
+
 }
+
+void	display_directories(int ac, char **av,  int flag)
+{
+	t_file	*list;
+	t_file	*first;
+
+	list = build_directory_list(ac, av);
+	first = list;
+	if ((list != NULL) && (flag))
+		ft_printf(1, "\n");
+//	flag = 0;
+	if ((list) && (list->next))
+		flag = 1;
+	if (list != NULL)
+	{
+		sort_list(list, sort_by_name_asc);
+		while (list)
+		{
+			if (flag)
+				ft_printf(1, "%s:\n", list->name);
+			list->name = directory_add_slash(list->name);
+			list_directory(list->name);
+			list = list->next;
+			if (list)
+				ft_printf(1, "\n");
+		}
+		destroy_list(first);
+	}
+}
+
 
 /////////////////
 int	main(int ac, char **av)
 {
-	char	*path;
-	char	*tmp;
+	int			mixed_input;
 
-	if ((ac > 1) && (av[1]))
-		path = ft_strdup(av[1]);
-	else
-		path = ft_strdup(".");
-
-	if (path[ft_strlen(path) - 1] != '/')
+	g_ls_name = av[0];
+	if ((av[0][0] == '.') && (av[0][1] == '/'))
+		g_ls_name = &av[0][2];
+	parse_options(ac, av);
+	if (!av[g_opt.last_opt])
 	{
-		tmp = ft_strjoin(path, "/");
-		free(path);
-		path = tmp;
+		g_opt.last_opt -= 1;
+		av[g_opt.last_opt][0] = '.';
+		av[g_opt.last_opt][1] = 0;
 	}
-	if (is_directory(path))
-		list_directory(path);
-
+	mixed_input = display_files(ac, av);
+	display_directories(ac, av, mixed_input);
 	return (0);
-	
 }

@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/10/30 09:37:11 by asarandi          #+#    #+#             */
-/*   Updated: 2017/11/12 17:37:39 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/01 02:14:22 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ char			*ft_strcpy(char *dst, const char *src);
 char			*ft_strdup(const char *s1);
 char			*ft_strtoupper(char *s);
 int				digits_before_point(uintmax_t n);
-int				ft_printf(const char *restrict format, ...);
+int				ft_printf(int fd, const char *restrict format, ...);
 int				get_base(char type);
 int				get_default_length(char type);
 int				get_wstr_length(wchar_t *wstr);
@@ -76,7 +76,7 @@ int				is_deprecated(char type);
 int				is_digit(char c);
 int				is_numeric(char type);
 int				is_signed(char type);
-int				main_routine(t_cc restrict *format, va_list *ap, int written);
+int				main_routine(int fd, t_cc restrict *format, va_list *ap, int w);
 int				wchar_to_utf8(unsigned int wchar, unsigned char *output);
 size_t			ft_strlen(const char *s);
 unsigned char	*get_char(va_list *ap, t_placeholder *ph);

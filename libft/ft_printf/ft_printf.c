@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/10/30 09:21:32 by asarandi          #+#    #+#             */
-/*   Updated: 2017/11/11 23:59:10 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/01 02:13:39 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ void	invalid_skip_forward(char **fmt, t_placeholder *ph)
 	}
 }
 
-int		main_routine(const char *restrict *format, va_list *ap, int written)
+int		main_routine(int fd, const char *restrict *format, va_list *ap, int w)
 {
 	char			*fmt;
 	t_placeholder	placeholder;
@@ -36,15 +36,15 @@ int		main_routine(const char *restrict *format, va_list *ap, int written)
 	if (*(*format + 1) == '%')
 	{
 		(*format)++;
-		return (write(1, (*format)++, 1));
+		return (write(fd, (*format)++, 1));
 	}
 	fmt = (char *)*(format);
 	init_placeholder(&placeholder);
-	placeholder.written = written;
+	placeholder.written = w;
 	parse_placeholder(&fmt, ap, &placeholder);
 	if (placeholder.char_count == 0)
 		placeholder.char_count = ft_strlen((char *)placeholder.output);
-	write(1, placeholder.output, placeholder.char_count);
+	write(fd, placeholder.output, placeholder.char_count);
 	free(placeholder.output);
 	invalid_skip_forward(&fmt, &placeholder);
 	(*format) = (char *)fmt;
@@ -65,7 +65,7 @@ int		color_routine(const char *restrict *format)
 	return (i);
 }
 
-int		ft_printf(const char *restrict format, ...)
+int		ft_printf(int fd, const char *restrict format, ...)
 {
 	va_list	ap;
 	int		count;
@@ -77,10 +77,10 @@ int		ft_printf(const char *restrict format, ...)
 		if (((*format) == '{') && (*format + 1))
 			count += color_routine(&format);
 		if ((*format == '%') && (*format + 1))
-			count += main_routine(&format, &ap, count);
+			count += main_routine(fd, &format, &ap, count);
 		else
 		{
-			write(1, format++, 1);
+			write(fd, format++, 1);
 			count++;
 		}
 	}

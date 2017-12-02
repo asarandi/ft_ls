@@ -15,3 +15,11 @@ PARTIAL** test/debug, implement error handling
 -reverse
 -hide owner
 -hide group
+-added -F for symbol (cancels slash)
+-added -p for slash (cancels symbol)
+-added -1 for simple print
+-added -T for long time format
+
+
+PRIORITY!!
+!!! ** code needs to be split-up into functions and normed!

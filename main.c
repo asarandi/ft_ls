@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 20:02:16 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/01 02:35:33 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/01 20:42:59 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,6 +164,8 @@ t_file	*create_list(char *path)
 	t_file			*new;
 
 	first = NULL;
+	index = NULL;
+	errno = 0;
 	if ((dirp = opendir(path)) == NULL)
 		return (NULL);
 	while ((dp = readdir(dirp)) != NULL)
@@ -185,7 +187,8 @@ t_file	*create_list(char *path)
 			}
 		}
 	}
-	index->next = NULL;
+	if (index)
+		index->next = NULL;
 	closedir(dirp);
 	return (first);
 }
@@ -206,6 +209,7 @@ void	destroy_list(t_file *list)
 	return ;
 }
 
+//////////////////////////////////////////////////////
 int		sort_by_name_asc(t_file *file1, t_file *file2)
 {
 	return (ft_strcmp(file1->name, file2->name));
@@ -215,38 +219,250 @@ int		sort_by_name_desc(t_file *file1, t_file *file2)
 {
 	return (ft_strcmp(file2->name, file1->name));
 }
-
+///////////////////////////////////////////////////////
 int		sort_by_size_asc(t_file *file1, t_file *file2)
 {
-	if (file1->st.st_size > file2->st.st_size)
+	if (file2->st.st_size > file1->st.st_size)
+		return (1);
+	if (file2->st.st_size < file1->st.st_size)
+		return (-1);
+	else
+		return (sort_by_name_asc(file1, file2));
+}
+
+int		sort_by_size_desc(t_file *file1, t_file *file2)
+{
+	if (file2->st.st_size > file1->st.st_size)
+		return (-1);
+	if (file2->st.st_size < file1->st.st_size)
 		return (1);
 	else
-		return (-1);
+		return (sort_by_name_desc(file1, file2));
 }
-
-void	sort_list(t_file *list, int (f)(t_file *f1, t_file *f2))
+///////////////////////////////////////////////////////
+int		sort_by_mtime_asc(t_file *file1, t_file *file2)
 {
-	char		*tmp_name;
-	struct stat	tmp_st;
-	t_file		*current;
-
-	current = list;
-	while (current->next != NULL)
-	{
-		if ((f(current, current->next)) > 0)
-		{
-			tmp_name = current->name;
-			current->name = current->next->name;
-			current->next->name = tmp_name;
-			tmp_st = current->st;
-			current->st = current->next->st;
-			current->next->st = tmp_st;
-			current = list;
-		}
-		else
-			current = current->next;
-	}
+	if (file2->st.st_mtimespec.tv_sec > file1->st.st_mtimespec.tv_sec)
+		return (1);
+	else if (file2->st.st_mtimespec.tv_sec < file1->st.st_mtimespec.tv_sec)
+		return (-1);
+	else if (file2->st.st_mtimespec.tv_nsec > file1->st.st_mtimespec.tv_nsec)
+			return (1);
+	else if (file2->st.st_mtimespec.tv_nsec < file1->st.st_mtimespec.tv_nsec)
+			return (-1);
+	else
+		return (sort_by_name_asc(file1, file2));
 }
+
+int		sort_by_mtime_desc(t_file *file1, t_file *file2)
+{
+	if (file2->st.st_mtimespec.tv_sec > file1->st.st_mtimespec.tv_sec)
+		return (-1);
+	else if (file2->st.st_mtimespec.tv_sec < file1->st.st_mtimespec.tv_sec)
+		return (1);
+	else if (file2->st.st_mtimespec.tv_nsec > file1->st.st_mtimespec.tv_nsec)
+			return (-1);
+	else if (file2->st.st_mtimespec.tv_nsec < file1->st.st_mtimespec.tv_nsec)
+			return (1);
+	else
+		return (sort_by_name_desc(file1, file2));
+}
+//////////////////////////////////////////////////////
+int		sort_by_atime_asc(t_file *file1, t_file *file2)
+{
+	if (file2->st.st_atimespec.tv_sec > file1->st.st_atimespec.tv_sec)
+		return (1);
+	else if (file2->st.st_atimespec.tv_sec < file1->st.st_atimespec.tv_sec)
+		return (-1);
+	else if (file2->st.st_atimespec.tv_nsec > file1->st.st_atimespec.tv_nsec)
+			return (1);
+	else if (file2->st.st_atimespec.tv_nsec < file1->st.st_atimespec.tv_nsec)
+			return (-1);
+	else
+		return (sort_by_name_asc(file1, file2));
+}
+
+int		sort_by_atime_desc(t_file *file1, t_file *file2)
+{
+	if (file2->st.st_atimespec.tv_sec > file1->st.st_atimespec.tv_sec)
+		return (-1);
+	else if (file2->st.st_atimespec.tv_sec < file1->st.st_atimespec.tv_sec)
+		return (1);
+	else if (file2->st.st_atimespec.tv_nsec > file1->st.st_atimespec.tv_nsec)
+			return (-1);
+	else if (file2->st.st_atimespec.tv_nsec < file1->st.st_atimespec.tv_nsec)
+			return (1);
+	else
+		return (sort_by_name_desc(file1, file2));
+}
+//////////////////////////////////////////////////////
+int		sort_by_ctime_asc(t_file *file1, t_file *file2)
+{
+	if (file2->st.st_ctimespec.tv_sec > file1->st.st_ctimespec.tv_sec)
+		return (1);
+	else if (file2->st.st_ctimespec.tv_sec < file1->st.st_ctimespec.tv_sec)
+		return (-1);
+	else if (file2->st.st_ctimespec.tv_nsec > file1->st.st_ctimespec.tv_nsec)
+			return (1);
+	else if (file2->st.st_ctimespec.tv_nsec < file1->st.st_ctimespec.tv_nsec)
+			return (-1);
+	else
+		return (sort_by_name_asc(file1, file2));
+}
+
+int		sort_by_ctime_desc(t_file *file1, t_file *file2)
+{
+	if (file2->st.st_ctimespec.tv_sec > file1->st.st_ctimespec.tv_sec)
+		return (-1);
+	else if (file2->st.st_ctimespec.tv_sec < file1->st.st_ctimespec.tv_sec)
+		return (1);
+	else if (file2->st.st_ctimespec.tv_nsec > file1->st.st_ctimespec.tv_nsec)
+			return (-1);
+	else if (file2->st.st_ctimespec.tv_nsec < file1->st.st_ctimespec.tv_nsec)
+			return (1);
+	else
+		return (sort_by_name_desc(file1, file2));
+}
+//////////////////////////////////////////////////////
+int		sort_by_btime_asc(t_file *file1, t_file *file2)
+{
+	if (file2->st.st_birthtimespec.tv_sec > file1->st.st_birthtimespec.tv_sec)
+		return (1);
+	else if (file2->st.st_birthtimespec.tv_sec < file1->st.st_birthtimespec.tv_sec)
+		return (-1);
+	else if (file2->st.st_birthtimespec.tv_nsec > file1->st.st_birthtimespec.tv_nsec)
+			return (1);
+	else if (file2->st.st_birthtimespec.tv_nsec < file1->st.st_birthtimespec.tv_nsec)
+			return (-1);
+	else
+		return (sort_by_name_asc(file1, file2));
+}
+
+int		sort_by_btime_desc(t_file *file1, t_file *file2)
+{
+	if (file2->st.st_birthtimespec.tv_sec > file1->st.st_birthtimespec.tv_sec)
+		return (-1);
+	else if (file2->st.st_birthtimespec.tv_sec < file1->st.st_birthtimespec.tv_sec)
+		return (1);
+	else if (file2->st.st_birthtimespec.tv_nsec > file1->st.st_birthtimespec.tv_nsec)
+			return (-1);
+	else if (file2->st.st_birthtimespec.tv_nsec < file1->st.st_birthtimespec.tv_nsec)
+			return (1);
+	else
+		return (sort_by_name_desc(file1, file2));
+}
+//////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+//int cmp(t_file *a, t_file *b) {
+//    return (ft_strcmp(a->name,  b->name));
+//}
+
+/*
+**  merge sort algo by simon tatham,
+**  https://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.c
+*/
+
+t_file *listsort(t_file *list, int (f)(t_file *f1, t_file *f2))
+{
+    t_file *p, *q, *e, *tail;
+    int insize, nmerges, psize, qsize, i;
+
+    if (!list) 	return NULL;
+    insize = 1;
+    while (1) {
+        p = list;
+        list = NULL;
+        tail = NULL;
+        nmerges = 0;  /* count number of merges we do in this pass */
+        while (p) {
+            nmerges++;  /* there exists a merge to be done */
+            q = p;
+            psize = 0;
+            for (i = 0; i < insize; i++) {
+                psize++;
+		    q = q->next;
+                if (!q) break;
+            }
+            qsize = insize;
+            while (psize > 0 || (qsize > 0 && q)) {
+                if (psize == 0) {
+		    e = q; q = q->next; qsize--;
+		} else if (qsize == 0 || !q) {
+		    e = p; p = p->next; psize--;
+		} else if (f(p,q) <= 0) {
+		    e = p; p = p->next; psize--;
+		} else {
+		    e = q; q = q->next; qsize--;
+		}
+		if (tail) {
+		    tail->next = e;
+		} else {
+		    list = e;
+		}
+		tail = e;
+            }
+            p = q;
+        }
+	    tail->next = NULL;
+        if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */
+            return list;
+        insize *= 2;
+    }
+}
+
+
+
+
+
+void	sort_list(t_file **list)
+{
+
+	int (*f)(t_file *f1, t_file *f2);
+
+	f = sort_by_name_asc;
+	if (g_opt.sort == -1)
+		return ;
+	else if (g_opt.sort == 0)
+		f = g_opt.reverse == 0 ? sort_by_name_asc : sort_by_name_desc;
+
+	else if (g_opt.sort == 1)
+		f = g_opt.reverse == 0 ? sort_by_mtime_asc : sort_by_mtime_desc;
+
+
+	else if (g_opt.sort == 2)
+		f = g_opt.reverse == 0 ? sort_by_atime_asc : sort_by_atime_desc;
+
+
+	else if (g_opt.sort == 3)
+		f = g_opt.reverse == 0 ? sort_by_btime_asc : sort_by_btime_desc;
+
+
+
+	else if (g_opt.sort == 4)
+		f = g_opt.reverse == 0 ? sort_by_size_asc : sort_by_size_desc;
+
+//	int sort; 			//     (0) by name,
+						// -t  (1) by time mod,
+						// -u  (2) by time access,
+						// -U  (3) by time created,
+						// -S  (4) by size
+						// -f (-1) no sort
+	(*list) = listsort(*list, f);
+
+}
+
+
+
+
+
+
 
 
 int		check_extended_attributes(char *path, t_file *list)
@@ -467,6 +683,16 @@ char	*get_symlink_address(char *path, t_file *list)
 
 
 
+
+void print_basic(t_file *list)
+{
+	while (list)
+	{
+		printf("%s\n", list->name);
+		list = list->next;
+	}
+}
+
 void	print_list(char *path, t_file *list)
 {
 	int				links_width;
@@ -477,6 +703,12 @@ void	print_list(char *path, t_file *list)
 	struct group	*grp;
 	char			*symlink;
 	int				has_cb;
+
+	if ((list) && (g_opt.long_list == 0))
+	{
+		print_basic(list);
+		return ;
+	}
 
 	if (*path)
 		ft_printf(1, "total %llu\n", count_blocks(list));
@@ -492,11 +724,13 @@ void	print_list(char *path, t_file *list)
 		print_extended_attributes(path, list);
 		ft_printf(1, " %*u ", links_width, list->st.st_nlink);
 		pwd = getpwuid(list->st.st_uid);
-		if (pwd != NULL)
+		if ((pwd != NULL) && (g_opt.hide_owner == 0))
 			ft_printf(1, "%-*s  ", owner_width, pwd->pw_name);
 		grp = getgrgid(list->st.st_gid);
-		if (grp != NULL)
+		if ((grp != NULL) && (g_opt.hide_group == 0))
 			ft_printf(1, "%-*s  ", group_width, grp->gr_name);
+		if ((g_opt.hide_owner == 1) && (g_opt.hide_group == 1))
+			ft_printf(1, "  ");
 		if (has_cb)
 		{
 			if ((S_ISCHR(list->st.st_mode)) || (S_ISBLK(list->st.st_mode)))
@@ -528,36 +762,19 @@ void	print_list(char *path, t_file *list)
 	}
 }
 
-char	*directory_add_slash(char *path)
+void	directory_add_slash(char **path)
 {
 	int	len;
 	char *tmp;
 
-	len = ft_strlen(path);
+	len = ft_strlen(*path);
 
-	if ((*path) && (path[len - 1] != '/'))
+	if ((*(*path)) && ((*path)[len - 1] != '/'))
 	{
-		tmp = ft_strjoin(path, "/");
-		free(path);
-		path = tmp;
+		tmp = ft_strjoin(*path, "/");
+		free((*path));
+		(*path) = tmp;
 	}
-	return (path);
-}
-
-void	list_directory(char *path)
-{
-	t_file	*list;
-
-	list = create_list(path);
-	if (list != NULL)
-	{
-		sort_list(list, sort_by_name_asc);
-		print_list(path, list);
-		destroy_list(list);
-	}
-	else
-		ft_printf(2, "%s: %s: %s\n", g_ls_name, path, strerror(errno));
-		
 }
 
 int	is_directory(char *path)
@@ -565,10 +782,80 @@ int	is_directory(char *path)
 	struct	stat st;
 
 	lstat(path, &st);
+	if (S_ISLNK(st.st_mode))
+		return (0);
 	if (S_ISDIR(st.st_mode))
 		return (1);
 	else
 		return (0);
+}
+
+char *directory_add_path(char *path, char *dir)
+{
+	int		len;
+	char	*result;
+	char	*tmp;
+
+	len = ft_strlen(path);
+	if (path[len - 1] != '/')
+		tmp = ft_strjoin(path, "/");
+	else
+		tmp = path;
+	result = ft_strjoin(tmp, dir);
+	if (tmp != path)
+		free(tmp);
+	len = ft_strlen(result);
+	if (result[len - 1] != '/')
+	{
+		tmp = result;
+		result = ft_strjoin(result, "/");
+		free(tmp);
+	}
+	return (result);
+}
+
+
+int	ok_to_recurse(char *path)
+{
+	if (ft_strcmp(path, ".") == 0)
+		return (0);
+	if (ft_strcmp(path, "..") == 0)
+		return (0);
+	
+	return (1);
+}
+
+void	list_directory(char *path)
+{
+	t_file	*list;
+	t_file	*start;
+	char	*subdir;
+
+	list = create_list(path);
+	if (list != NULL)
+	{
+		sort_list(&list);
+		print_list(path, list);
+		start = list;
+		if (g_opt.recursive == 1)
+		{
+			while (list)
+			{
+				subdir = ft_strjoin(path, list->name);
+				if ((is_directory(subdir)) && (ok_to_recurse(list->name)))
+				{
+					ft_printf(1, "\n%s:\n", subdir);
+					directory_add_slash(&subdir);
+					list_directory(subdir);
+				}
+				free(subdir);
+				list = list->next;
+			}
+		}
+		destroy_list(start);
+	}
+	else if (errno)
+		ft_printf(2, "%s: %s: %s\n", g_ls_name, path, strerror(errno));
 }
 
 void	illegal_option(char c)
@@ -749,7 +1036,7 @@ int	display_files(int ac, char **av)
 	list = build_file_list(ac, av);
 	if (list != NULL)
 	{
-		sort_list(list, sort_by_name_asc);
+		sort_list(&list);
 		print_list("", list);
 		destroy_list(list);
 		return (1);
@@ -772,12 +1059,12 @@ void	display_directories(int ac, char **av,  int flag)
 		flag = 1;
 	if (list != NULL)
 	{
-		sort_list(list, sort_by_name_asc);
+		sort_list(&list);
 		while (list)
 		{
 			if (flag)
 				ft_printf(1, "%s:\n", list->name);
-			list->name = directory_add_slash(list->name);
+			directory_add_slash(&list->name);
 			list_directory(list->name);
 			list = list->next;
 			if (list)

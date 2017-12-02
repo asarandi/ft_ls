@@ -7,3 +7,11 @@ DONE** add major/minor support for char devices
 
 PARTIAL** implement command line options/arguments
 PARTIAL** test/debug, implement error handling
+
+12/01/2017
+-added merge sort
+-added recursive print
+-added basic print
+-basic print
+-hide owner
+-hide group

@@ -12,6 +12,6 @@ PARTIAL** test/debug, implement error handling
 -added merge sort
 -added recursive print
 -added basic print
--basic print
+-reverse
 -hide owner
 -hide group

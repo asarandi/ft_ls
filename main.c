@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 20:02:16 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/01 20:42:59 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/02 01:46:49 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,18 @@ typedef	struct	list_options {
 	int	reverse;		// -r
 	int show_dot;		// -a
 	int show_hidden;	// -A
+	int time;
 	int sort; 			//     (0) by name,
 						// -t  (1) by time mod,
 						// -u  (2) by time access,
 						// -U  (3) by time created,
 						// -S  (4) by size
 						// -f (-1) no sort
-	
+
+	int symbol;			// -F
+	int slash;			// -p
 	int colors;			// -G
+	int fulltime;		// -T
 	int hide_owner;		// -g -- turns on l
 	int hide_group; 	// -o -- turn on l
 	int show_acl;		// -e -- when used with l
@@ -66,6 +70,31 @@ void	print_entry_type(unsigned long st_mode)
 		write(1, "s", 1);
 	else
 		write(1, "?", 1);
+}
+
+void	print_entry_symbol(unsigned long st_mode)
+{
+	if (g_opt.slash == 1)
+	{
+		if (S_ISDIR(st_mode))
+			write(1, "/", 1);
+		return ;
+	}
+	if (g_opt.symbol == 1)
+	{
+		if (S_ISDIR(st_mode))
+			write(1, "/", 1);
+		else if (S_ISFIFO(st_mode))
+			write(1, "|", 1);
+		else if (S_ISLNK(st_mode))
+			write(1, "@", 1);
+		else if (S_ISSOCK(st_mode))
+			write(1, "=", 1);
+		else if (S_ISWHT(st_mode))
+			write(1, "%", 1);
+		else if (st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
+			write(1, "*", 1);
+	}
 }
 
 void	print_permissions(unsigned long st_mode)
@@ -417,9 +446,20 @@ t_file *listsort(t_file *list, int (f)(t_file *f1, t_file *f2))
     }
 }
 
+/*
+
+				else if (av[i][k] == 'u')
+					g_opt.time = 1;
+				else if (av[i][k] == 'U')
+					g_opt.time = 2;
+				else if (av[i][k] == 'c')
+					g_opt.time = 3;
+*/
 
 
-
+//u U c
+//a b c
+//1 2 3
 
 void	sort_list(t_file **list)
 {
@@ -432,21 +472,38 @@ void	sort_list(t_file **list)
 	else if (g_opt.sort == 0)
 		f = g_opt.reverse == 0 ? sort_by_name_asc : sort_by_name_desc;
 
+	else if (g_opt.sort == 4)
+		f = g_opt.reverse == 0 ? sort_by_size_asc : sort_by_size_desc;
+
+
+
+	else if ((g_opt.sort == 1) && (g_opt.time == 1))
+		f = g_opt.reverse == 0 ? sort_by_atime_asc : sort_by_atime_desc;
+
+	else if ((g_opt.sort == 1) && (g_opt.time == 2))
+		f = g_opt.reverse == 0 ? sort_by_btime_asc : sort_by_btime_desc;
+
+	else if ((g_opt.sort == 1) && (g_opt.time == 3))
+		f = g_opt.reverse == 0 ? sort_by_ctime_asc : sort_by_ctime_desc;
+
 	else if (g_opt.sort == 1)
 		f = g_opt.reverse == 0 ? sort_by_mtime_asc : sort_by_mtime_desc;
 
 
-	else if (g_opt.sort == 2)
-		f = g_opt.reverse == 0 ? sort_by_atime_asc : sort_by_atime_desc;
+/*
+				else if (av[i][k] == 't')
+					g_opt.sort = 1;
+				else if (av[i][k] == 'u')
+					g_opt.sort = 2;
+				else if (av[i][k] == 'U')
+					g_opt.sort = 3;
+				else if (av[i][k] == 'S')
+					g_opt.sort = 4;
+				else if (av[i][k] == 'c')
+					g_opt.sort = 5;
 
+*/
 
-	else if (g_opt.sort == 3)
-		f = g_opt.reverse == 0 ? sort_by_btime_asc : sort_by_btime_desc;
-
-
-
-	else if (g_opt.sort == 4)
-		f = g_opt.reverse == 0 ? sort_by_size_asc : sort_by_size_desc;
 
 //	int sort; 			//     (0) by name,
 						// -t  (1) by time mod,
@@ -457,10 +514,6 @@ void	sort_list(t_file **list)
 	(*list) = listsort(*list, f);
 
 }
-
-
-
-
 
 
 
@@ -688,7 +741,9 @@ void print_basic(t_file *list)
 {
 	while (list)
 	{
-		printf("%s\n", list->name);
+		ft_printf(1, "%s", list->name);
+		print_entry_symbol(list->st.st_mode);
+		ft_printf(1, "\n");
 		list = list->next;
 	}
 }
@@ -703,6 +758,7 @@ void	print_list(char *path, t_file *list)
 	struct group	*grp;
 	char			*symlink;
 	int				has_cb;
+	struct timespec	ts;
 
 	if ((list) && (g_opt.long_list == 0))
 	{
@@ -746,8 +802,30 @@ void	print_list(char *path, t_file *list)
 		}
 		else
 			ft_printf(1, "%*llu ", size_width, list->st.st_size);
-		ft_printf(1, "%.12s ", make_time_string(list->st.st_mtimespec));
+
+/*
+modiftime  = mtime 1
+accesstime = atime 2 -u 1
+statustime = ctime 5 -c 3
+ birthtime = btime 3 -U 2
+*/
+
+		if (g_opt.time == 1)
+			ts = list->st.st_atimespec;
+		else if (g_opt.time == 3)
+			ts = list->st.st_ctimespec;
+		else if (g_opt.time == 2)
+			ts = list->st.st_birthtimespec;
+		else
+			ts = list->st.st_mtimespec;
+
+		if (g_opt.fulltime == 1)
+			ft_printf(1, "%.20s ", ctime(&ts.tv_sec)+4);
+
+		else
+			ft_printf(1, "%.12s ", make_time_string(ts));
 		ft_printf(1, "%s", list->name);
+		print_entry_symbol(list->st.st_mode);
 		if (S_ISLNK(list->st.st_mode))
 		{
 			symlink = get_symlink_address(path, list);
@@ -782,8 +860,8 @@ int	is_directory(char *path)
 	struct	stat st;
 
 	lstat(path, &st);
-	if (S_ISLNK(st.st_mode))
-		return (0);
+//	if (S_ISLNK(st.st_mode))
+//		return (0);
 	if (S_ISDIR(st.st_mode))
 		return (1);
 	else
@@ -861,7 +939,7 @@ void	list_directory(char *path)
 void	illegal_option(char c)
 {
 	ft_printf(2, "%s: illegal option -- %c\n", g_ls_name, c);
-	ft_printf(2, "usage: ls [-AadefGgloRrStUu@] [file ...]\n");
+	ft_printf(2, "usage: ls [-AacdeFfGglopRrSTtUu@1] [file ...]\n");
 	exit(0);
 }
 
@@ -872,8 +950,12 @@ void	clear_options()
 	g_opt.reverse = 0;
 	g_opt.show_dot = 0;
 	g_opt.show_hidden = 0;
+	g_opt.time = 0;
 	g_opt.sort = 0;
+	g_opt.symbol = 0;
+	g_opt.slash = 0;
 	g_opt.colors = 0;
+	g_opt.fulltime = 0;
 	g_opt.hide_owner = 0;
 	g_opt.hide_group = 0;
 	g_opt.show_acl = 0;
@@ -902,8 +984,11 @@ void parse_options(int ac, char **av)
 			k = 1;
 			while (av[i][k])
 			{
-				if (av[i][k] == 'l')
-					g_opt.long_list = 1;
+				if (av[i][k] == 'l') // <- ELL
+					g_opt.long_list = 1; // <- ONE
+				else if (av[i][k] == '1') // <- ONE
+					g_opt.long_list = 0; // <- ZERO
+
 				else if (av[i][k] == 'R')
 					g_opt.recursive = 1;
 				else if (av[i][k] == 'r')
@@ -913,15 +998,38 @@ void parse_options(int ac, char **av)
 				else if (av[i][k] == 'A')
 					g_opt.show_hidden = 1;
 				else if (av[i][k] == 't')
-					g_opt.sort = 1;
-				else if (av[i][k] == 'u')
-					g_opt.sort = 2;
-				else if (av[i][k] == 'U')
-					g_opt.sort = 3;
+				{	
+					if (g_opt.sort != 4)
+						g_opt.sort = 1;
+				}
 				else if (av[i][k] == 'S')
 					g_opt.sort = 4;
+
+				else if (av[i][k] == 'u')
+					g_opt.time = 1;
+				else if (av[i][k] == 'U')
+					g_opt.time = 2;
+				else if (av[i][k] == 'c')
+					g_opt.time = 3;
+
 				else if (av[i][k] == 'f')
+				{
 					g_opt.sort = -1;
+					g_opt.show_dot = 1;
+				}
+				else if (av[i][k] == 'T')
+					g_opt.fulltime = 1;
+				else if (av[i][k] == 'F')
+				{
+					g_opt.symbol = 1;
+					g_opt.slash = 0;
+				}
+				else if (av[i][k] == 'p')
+				{
+					g_opt.slash = 1;
+					g_opt.symbol = 0;
+				}
+
 				else if (av[i][k] == 'G')
 					g_opt.colors = 1;
 				else if (av[i][k] == 'g')

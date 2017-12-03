@@ -6,124 +6,11 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 20:02:16 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/02 01:46:49 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/02 23:10:22 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ls.h"
-//////////////////
-
-char	*g_ls_name;
-
-typedef	struct	list_options {
-	int	long_list;		// -l
-	int	recursive;		// -R
-	int	reverse;		// -r
-	int show_dot;		// -a
-	int show_hidden;	// -A
-	int time;
-	int sort; 			//     (0) by name,
-						// -t  (1) by time mod,
-						// -u  (2) by time access,
-						// -U  (3) by time created,
-						// -S  (4) by size
-						// -f (-1) no sort
-
-	int symbol;			// -F
-	int slash;			// -p
-	int colors;			// -G
-	int fulltime;		// -T
-	int hide_owner;		// -g -- turns on l
-	int hide_group; 	// -o -- turn on l
-	int show_acl;		// -e -- when used with l
-	int	show_extattr;	// -@ -- when used with l
-	int plain;			// -d
-	int last_opt;		// where options end and arguments start
-
-} t_options;
-
-t_options	g_opt;
-
-typedef	struct	s_file
-{
-		char 			*name;
-		struct stat		st;
-		struct s_file	*prev;
-		struct s_file	*next;
-}				t_file;
-
-void	print_entry_type(unsigned long st_mode)
-{
-	if (S_ISREG(st_mode))
-		write(1, "-", 1);
-	else if (S_ISDIR(st_mode))
-		write(1, "d", 1);
-	else if (S_ISCHR(st_mode))
-		write(1, "c", 1);
-	else if (S_ISBLK(st_mode))
-		write(1, "b", 1);
-	else if (S_ISFIFO(st_mode))
-		write(1, "p", 1);
-	else if (S_ISLNK(st_mode))
-		write(1, "l", 1);
-	else if (S_ISSOCK(st_mode))
-		write(1, "s", 1);
-	else
-		write(1, "?", 1);
-}
-
-void	print_entry_symbol(unsigned long st_mode)
-{
-	if (g_opt.slash == 1)
-	{
-		if (S_ISDIR(st_mode))
-			write(1, "/", 1);
-		return ;
-	}
-	if (g_opt.symbol == 1)
-	{
-		if (S_ISDIR(st_mode))
-			write(1, "/", 1);
-		else if (S_ISFIFO(st_mode))
-			write(1, "|", 1);
-		else if (S_ISLNK(st_mode))
-			write(1, "@", 1);
-		else if (S_ISSOCK(st_mode))
-			write(1, "=", 1);
-		else if (S_ISWHT(st_mode))
-			write(1, "%", 1);
-		else if (st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
-			write(1, "*", 1);
-	}
-}
-
-void	print_permissions(unsigned long st_mode)
-{
-	(st_mode & S_IRUSR) ? write(1, "r", 1) : write(1, "-", 1);
-	(st_mode & S_IWUSR) ? write(1, "w", 1) : write(1, "-", 1);
-	if (st_mode & S_ISUID)
-		(st_mode & S_IXUSR) ? write(1, "s", 1) : write(1, "S", 1);
-	else
-		(st_mode & S_IXUSR) ? write(1, "x", 1) : write(1, "-", 1);
-	(st_mode & S_IRGRP) ? write(1, "r", 1) : write(1, "-", 1);
-	(st_mode & S_IWGRP) ? write(1, "w", 1) : write(1, "-", 1);
-	if (st_mode & S_ISGID)
-		(st_mode & S_IXGRP) ? write(1, "s", 1) : write(1, "S", 1);
-	else
-		(st_mode & S_IXGRP) ? write(1, "x", 1) : write(1, "-", 1);
-	(st_mode & S_IROTH) ? write(1, "r", 1) : write(1, "-", 1);
-	(st_mode & S_IWOTH) ? write(1, "w", 1) : write(1, "-", 1);
-	if (st_mode & S_ISVTX)
-		(st_mode & S_IXOTH) ? write(1, "t", 1) : write(1, "T", 1);
-	else
-		(st_mode & S_IXOTH) ? write(1, "x", 1) : write(1, "-", 1);
-}
-
-void print_file_mode(unsigned long st_mode)
-{
-	(void)print_entry_type(st_mode);
-	(void)print_permissions(st_mode);
-}
 
 void	print_extended_attributes(char *path, t_file *file)
 {
@@ -146,7 +33,7 @@ void	print_extended_attributes(char *path, t_file *file)
 	}
 	free(fullpath);
 }
-///////////////////
+
 int	get_file_stats(char *path, t_file *file)
 {
 	char	*fullpath;
@@ -159,7 +46,7 @@ int	get_file_stats(char *path, t_file *file)
 		ft_printf(2, "%s: %s: %s\n", g_ls_name, file->name, strerror(errno));
 	return (result);
 }
-/////////////////
+
 int	is_allowed(char *fn)
 {
 	int	allowed;
@@ -182,7 +69,6 @@ int	is_allowed(char *fn)
 	}
 	return (allowed);
 }
-
 
 t_file	*create_list(char *path)
 {
@@ -238,283 +124,24 @@ void	destroy_list(t_file *list)
 	return ;
 }
 
-//////////////////////////////////////////////////////
-int		sort_by_name_asc(t_file *file1, t_file *file2)
+void	choose_sort()
 {
-	return (ft_strcmp(file1->name, file2->name));
-}
-
-int		sort_by_name_desc(t_file *file1, t_file *file2)
-{
-	return (ft_strcmp(file2->name, file1->name));
-}
-///////////////////////////////////////////////////////
-int		sort_by_size_asc(t_file *file1, t_file *file2)
-{
-	if (file2->st.st_size > file1->st.st_size)
-		return (1);
-	if (file2->st.st_size < file1->st.st_size)
-		return (-1);
-	else
-		return (sort_by_name_asc(file1, file2));
-}
-
-int		sort_by_size_desc(t_file *file1, t_file *file2)
-{
-	if (file2->st.st_size > file1->st.st_size)
-		return (-1);
-	if (file2->st.st_size < file1->st.st_size)
-		return (1);
-	else
-		return (sort_by_name_desc(file1, file2));
-}
-///////////////////////////////////////////////////////
-int		sort_by_mtime_asc(t_file *file1, t_file *file2)
-{
-	if (file2->st.st_mtimespec.tv_sec > file1->st.st_mtimespec.tv_sec)
-		return (1);
-	else if (file2->st.st_mtimespec.tv_sec < file1->st.st_mtimespec.tv_sec)
-		return (-1);
-	else if (file2->st.st_mtimespec.tv_nsec > file1->st.st_mtimespec.tv_nsec)
-			return (1);
-	else if (file2->st.st_mtimespec.tv_nsec < file1->st.st_mtimespec.tv_nsec)
-			return (-1);
-	else
-		return (sort_by_name_asc(file1, file2));
-}
-
-int		sort_by_mtime_desc(t_file *file1, t_file *file2)
-{
-	if (file2->st.st_mtimespec.tv_sec > file1->st.st_mtimespec.tv_sec)
-		return (-1);
-	else if (file2->st.st_mtimespec.tv_sec < file1->st.st_mtimespec.tv_sec)
-		return (1);
-	else if (file2->st.st_mtimespec.tv_nsec > file1->st.st_mtimespec.tv_nsec)
-			return (-1);
-	else if (file2->st.st_mtimespec.tv_nsec < file1->st.st_mtimespec.tv_nsec)
-			return (1);
-	else
-		return (sort_by_name_desc(file1, file2));
-}
-//////////////////////////////////////////////////////
-int		sort_by_atime_asc(t_file *file1, t_file *file2)
-{
-	if (file2->st.st_atimespec.tv_sec > file1->st.st_atimespec.tv_sec)
-		return (1);
-	else if (file2->st.st_atimespec.tv_sec < file1->st.st_atimespec.tv_sec)
-		return (-1);
-	else if (file2->st.st_atimespec.tv_nsec > file1->st.st_atimespec.tv_nsec)
-			return (1);
-	else if (file2->st.st_atimespec.tv_nsec < file1->st.st_atimespec.tv_nsec)
-			return (-1);
-	else
-		return (sort_by_name_asc(file1, file2));
-}
-
-int		sort_by_atime_desc(t_file *file1, t_file *file2)
-{
-	if (file2->st.st_atimespec.tv_sec > file1->st.st_atimespec.tv_sec)
-		return (-1);
-	else if (file2->st.st_atimespec.tv_sec < file1->st.st_atimespec.tv_sec)
-		return (1);
-	else if (file2->st.st_atimespec.tv_nsec > file1->st.st_atimespec.tv_nsec)
-			return (-1);
-	else if (file2->st.st_atimespec.tv_nsec < file1->st.st_atimespec.tv_nsec)
-			return (1);
-	else
-		return (sort_by_name_desc(file1, file2));
-}
-//////////////////////////////////////////////////////
-int		sort_by_ctime_asc(t_file *file1, t_file *file2)
-{
-	if (file2->st.st_ctimespec.tv_sec > file1->st.st_ctimespec.tv_sec)
-		return (1);
-	else if (file2->st.st_ctimespec.tv_sec < file1->st.st_ctimespec.tv_sec)
-		return (-1);
-	else if (file2->st.st_ctimespec.tv_nsec > file1->st.st_ctimespec.tv_nsec)
-			return (1);
-	else if (file2->st.st_ctimespec.tv_nsec < file1->st.st_ctimespec.tv_nsec)
-			return (-1);
-	else
-		return (sort_by_name_asc(file1, file2));
-}
-
-int		sort_by_ctime_desc(t_file *file1, t_file *file2)
-{
-	if (file2->st.st_ctimespec.tv_sec > file1->st.st_ctimespec.tv_sec)
-		return (-1);
-	else if (file2->st.st_ctimespec.tv_sec < file1->st.st_ctimespec.tv_sec)
-		return (1);
-	else if (file2->st.st_ctimespec.tv_nsec > file1->st.st_ctimespec.tv_nsec)
-			return (-1);
-	else if (file2->st.st_ctimespec.tv_nsec < file1->st.st_ctimespec.tv_nsec)
-			return (1);
-	else
-		return (sort_by_name_desc(file1, file2));
-}
-//////////////////////////////////////////////////////
-int		sort_by_btime_asc(t_file *file1, t_file *file2)
-{
-	if (file2->st.st_birthtimespec.tv_sec > file1->st.st_birthtimespec.tv_sec)
-		return (1);
-	else if (file2->st.st_birthtimespec.tv_sec < file1->st.st_birthtimespec.tv_sec)
-		return (-1);
-	else if (file2->st.st_birthtimespec.tv_nsec > file1->st.st_birthtimespec.tv_nsec)
-			return (1);
-	else if (file2->st.st_birthtimespec.tv_nsec < file1->st.st_birthtimespec.tv_nsec)
-			return (-1);
-	else
-		return (sort_by_name_asc(file1, file2));
-}
-
-int		sort_by_btime_desc(t_file *file1, t_file *file2)
-{
-	if (file2->st.st_birthtimespec.tv_sec > file1->st.st_birthtimespec.tv_sec)
-		return (-1);
-	else if (file2->st.st_birthtimespec.tv_sec < file1->st.st_birthtimespec.tv_sec)
-		return (1);
-	else if (file2->st.st_birthtimespec.tv_nsec > file1->st.st_birthtimespec.tv_nsec)
-			return (-1);
-	else if (file2->st.st_birthtimespec.tv_nsec < file1->st.st_birthtimespec.tv_nsec)
-			return (1);
-	else
-		return (sort_by_name_desc(file1, file2));
-}
-//////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-//int cmp(t_file *a, t_file *b) {
-//    return (ft_strcmp(a->name,  b->name));
-//}
-
-/*
-**  merge sort algo by simon tatham,
-**  https://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.c
-*/
-
-t_file *listsort(t_file *list, int (f)(t_file *f1, t_file *f2))
-{
-    t_file *p, *q, *e, *tail;
-    int insize, nmerges, psize, qsize, i;
-
-    if (!list) 	return NULL;
-    insize = 1;
-    while (1) {
-        p = list;
-        list = NULL;
-        tail = NULL;
-        nmerges = 0;  /* count number of merges we do in this pass */
-        while (p) {
-            nmerges++;  /* there exists a merge to be done */
-            q = p;
-            psize = 0;
-            for (i = 0; i < insize; i++) {
-                psize++;
-		    q = q->next;
-                if (!q) break;
-            }
-            qsize = insize;
-            while (psize > 0 || (qsize > 0 && q)) {
-                if (psize == 0) {
-		    e = q; q = q->next; qsize--;
-		} else if (qsize == 0 || !q) {
-		    e = p; p = p->next; psize--;
-		} else if (f(p,q) <= 0) {
-		    e = p; p = p->next; psize--;
-		} else {
-		    e = q; q = q->next; qsize--;
-		}
-		if (tail) {
-		    tail->next = e;
-		} else {
-		    list = e;
-		}
-		tail = e;
-            }
-            p = q;
-        }
-	    tail->next = NULL;
-        if (nmerges <= 1)   /* allow for nmerges==0, the empty list case */
-            return list;
-        insize *= 2;
-    }
-}
-
-/*
-
-				else if (av[i][k] == 'u')
-					g_opt.time = 1;
-				else if (av[i][k] == 'U')
-					g_opt.time = 2;
-				else if (av[i][k] == 'c')
-					g_opt.time = 3;
-*/
-
-
-//u U c
-//a b c
-//1 2 3
-
-void	sort_list(t_file **list)
-{
-
 	int (*f)(t_file *f1, t_file *f2);
-
 	f = sort_by_name_asc;
-	if (g_opt.sort == -1)
-		return ;
-	else if (g_opt.sort == 0)
+	if (g_opt.sort == 0)
 		f = g_opt.reverse == 0 ? sort_by_name_asc : sort_by_name_desc;
-
 	else if (g_opt.sort == 4)
 		f = g_opt.reverse == 0 ? sort_by_size_asc : sort_by_size_desc;
-
-
-
 	else if ((g_opt.sort == 1) && (g_opt.time == 1))
 		f = g_opt.reverse == 0 ? sort_by_atime_asc : sort_by_atime_desc;
-
 	else if ((g_opt.sort == 1) && (g_opt.time == 2))
 		f = g_opt.reverse == 0 ? sort_by_btime_asc : sort_by_btime_desc;
-
 	else if ((g_opt.sort == 1) && (g_opt.time == 3))
 		f = g_opt.reverse == 0 ? sort_by_ctime_asc : sort_by_ctime_desc;
-
 	else if (g_opt.sort == 1)
 		f = g_opt.reverse == 0 ? sort_by_mtime_asc : sort_by_mtime_desc;
-
-
-/*
-				else if (av[i][k] == 't')
-					g_opt.sort = 1;
-				else if (av[i][k] == 'u')
-					g_opt.sort = 2;
-				else if (av[i][k] == 'U')
-					g_opt.sort = 3;
-				else if (av[i][k] == 'S')
-					g_opt.sort = 4;
-				else if (av[i][k] == 'c')
-					g_opt.sort = 5;
-
-*/
-
-
-//	int sort; 			//     (0) by name,
-						// -t  (1) by time mod,
-						// -u  (2) by time access,
-						// -U  (3) by time created,
-						// -S  (4) by size
-						// -f (-1) no sort
-	(*list) = listsort(*list, f);
-
+	g_opt.sort_algo = f;
 }
-
 
 
 
@@ -1198,6 +825,7 @@ int	main(int ac, char **av)
 		av[g_opt.last_opt][0] = '.';
 		av[g_opt.last_opt][1] = 0;
 	}
+	choose_sort();
 	mixed_input = display_files(ac, av);
 	display_directories(ac, av, mixed_input);
 	return (0);

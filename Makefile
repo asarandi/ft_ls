@@ -6,13 +6,13 @@
 #    By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/11/26 20:09:21 by asarandi          #+#    #+#              #
-#    Updated: 2017/11/30 21:12:40 by asarandi         ###   ########.fr        #
+#    Updated: 2017/12/03 12:16:23 by asarandi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME	= ft_ls
 CC		= gcc
-CFLAGS	= -Wall -Werror -Wextra
+CFLAGS	= -Wall -Werror -Wextra -O3
 SRC		= $(wildcard *.c)
 OBJ		= $(SRC:%.c=%.o)
 LIB		= -Llibft -lft -Llibft/ft_printf -lftprintf

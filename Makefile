@@ -6,14 +6,32 @@
 #    By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/11/26 20:09:21 by asarandi          #+#    #+#              #
-#    Updated: 2017/12/03 20:29:06 by asarandi         ###   ########.fr        #
+#    Updated: 2017/12/04 04:02:20 by asarandi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME	= ft_ls
 CC		= gcc
 CFLAGS	= -Wall -Werror -Wextra -O3
-SRC		= $(wildcard *.c)
+SRC		=	build_list.c \
+			clear_structs.c \
+			compare_files1.c \
+			compare_files2.c \
+			compare_files3.c \
+			dir_util.c \
+			display.c \
+			extattr.c \
+			list_dir.c \
+			listdir_norme.c \
+			main.c \
+			merge_sort.c \
+			options.c \
+			parse_options.c \
+			print.c \
+			symbol_type.c \
+			symlink.c \
+			time.c \
+			widths.c
 OBJ		= $(SRC:%.c=%.o)
 LIB		= -Llibft -lft -Lft_printf -lftprintf
 

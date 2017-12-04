@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/02 22:21:06 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/03 12:28:09 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/03 18:48:43 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,4 +77,23 @@ void	sort_list(t_file **list)
 	sort_list(&left);
 	sort_list(&right);
 	(*list) = merge_lists(left, right);
+}
+
+void	choose_sort()
+{
+	int (*f)(t_file *f1, t_file *f2);
+	f = sort_by_name_asc;
+	if (g_opt.sort == 0)
+		f = g_opt.reverse == 0 ? sort_by_name_asc : sort_by_name_desc;
+	else if (g_opt.sort == 4)
+		f = g_opt.reverse == 0 ? sort_by_size_asc : sort_by_size_desc;
+	else if ((g_opt.sort == 1) && (g_opt.time == 1))
+		f = g_opt.reverse == 0 ? sort_by_atime_asc : sort_by_atime_desc;
+	else if ((g_opt.sort == 1) && (g_opt.time == 2))
+		f = g_opt.reverse == 0 ? sort_by_btime_asc : sort_by_btime_desc;
+	else if ((g_opt.sort == 1) && (g_opt.time == 3))
+		f = g_opt.reverse == 0 ? sort_by_ctime_asc : sort_by_ctime_desc;
+	else if (g_opt.sort == 1)
+		f = g_opt.reverse == 0 ? sort_by_mtime_asc : sort_by_mtime_desc;
+	g_opt.sort_algo = f;
 }

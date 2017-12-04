@@ -1,33 +1,34 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   time.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/11/25 20:02:16 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/03 18:53:35 by asarandi         ###   ########.fr       */
+/*   Created: 2017/12/03 18:44:43 by asarandi          #+#    #+#             */
+/*   Updated: 2017/12/03 18:44:47 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ls.h"
 
-int	main(int ac, char **av)
+char	*make_time_string(struct timespec ts)
 {
-	int			mixed_input;
+	time_t	now;
+	char	*result;
+	int		i;
 
-	g_ls_name = av[0];
-	if ((av[0][0] == '.') && (av[0][1] == '/'))
-		g_ls_name = &av[0][2];
-	parse_options(ac, av);
-	if (!av[g_opt.last_opt])
+	now = time(&now);
+	result = ctime(&ts.tv_sec);
+	if ((ts.tv_sec + ((365 / 2) * 86400) < now) ||
+			(now + ((365 / 2) * 86400) < ts.tv_sec))
 	{
-		g_opt.last_opt -= 1;
-		av[g_opt.last_opt][0] = '.';
-		av[g_opt.last_opt][1] = 0;
+		i = 0;
+		while (i < 5)
+		{
+			result[11 + i] = result[19 + i];
+			i++;
+		}
 	}
-	choose_sort();
-	mixed_input = display_files(ac, av);
-	display_directories(ac, av, mixed_input);
-	return (0);
+	return (&result[4]);
 }

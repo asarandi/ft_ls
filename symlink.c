@@ -1,33 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   symlink.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2017/11/25 20:02:16 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/03 18:53:35 by asarandi         ###   ########.fr       */
+/*   Created: 2017/12/03 18:50:10 by asarandi          #+#    #+#             */
+/*   Updated: 2017/12/03 18:50:14 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ls.h"
 
-int	main(int ac, char **av)
+char	*get_symlink_address(char *path, t_file *list)
 {
-	int			mixed_input;
+	char	*symlink;
+	char	*fullpath;
 
-	g_ls_name = av[0];
-	if ((av[0][0] == '.') && (av[0][1] == '/'))
-		g_ls_name = &av[0][2];
-	parse_options(ac, av);
-	if (!av[g_opt.last_opt])
+	if ((fullpath = ft_strjoin(path, list->name)) == NULL)
+		return (NULL);
+	if ((symlink = ft_memalloc(PATH_MAX)) == NULL)
 	{
-		g_opt.last_opt -= 1;
-		av[g_opt.last_opt][0] = '.';
-		av[g_opt.last_opt][1] = 0;
+		free(fullpath);
+		return (NULL);
 	}
-	choose_sort();
-	mixed_input = display_files(ac, av);
-	display_directories(ac, av, mixed_input);
-	return (0);
+	if ((readlink(fullpath, symlink, PATH_MAX)) == -1)
+	{
+		free(symlink);
+		free(fullpath);
+		return (NULL);
+	}
+	free(fullpath);
+	return (symlink);
 }

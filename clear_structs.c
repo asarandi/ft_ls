@@ -6,13 +6,13 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/03 18:24:15 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/03 18:24:36 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/03 19:39:57 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ls.h"
 
-void	clear_options()
+void	clear_options(void)
 {
 	g_opt.long_list = 0;
 	g_opt.recursive = 0;
@@ -33,7 +33,7 @@ void	clear_options()
 	g_opt.last_opt = 1;
 }
 
-void	clear_widths()
+void	clear_widths(void)
 {
 	g_width.links = 0;
 	g_width.owner = 0;

@@ -6,13 +6,13 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/03 18:27:58 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/03 18:28:08 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/04 03:45:41 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ls.h"
 
-int	display_files(int ac, char **av)
+int		display_files(int ac, char **av)
 {
 	t_file	*list;
 
@@ -20,15 +20,17 @@ int	display_files(int ac, char **av)
 	if (list != NULL)
 	{
 		sort_list(&list);
-		print_list("", list);
+		if (g_opt.long_list == 0)
+			print_basic(list);
+		else
+			print_long("", list);
 		destroy_list(list);
 		return (1);
 	}
 	return (0);
-
 }
 
-void	display_directories(int ac, char **av,  int flag)
+void	display_directories(int ac, char **av, int flag)
 {
 	t_file	*list;
 	t_file	*first;

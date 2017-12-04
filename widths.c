@@ -6,13 +6,13 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/03 14:28:58 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/03 18:24:51 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/03 19:43:11 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ls.h"
 
-int	count_digits(unsigned long long	n)
+int		count_digits(unsigned long long n)
 {
 	int	digits;
 
@@ -27,7 +27,7 @@ int	count_digits(unsigned long long	n)
 	return (digits);
 }
 
-void	calculate_widths()
+void	calculate_widths(void)
 {
 	t_x	temp;
 
@@ -85,7 +85,7 @@ void	get_directory_widths(t_file *list)
 			get_str_owner_width(&uid, list->st.st_uid);
 		if (list->st.st_gid != gid)
 			get_str_group_width(&gid, list->st.st_gid);
-		if ((S_ISCHR(list->st.st_mode)) ||	
+		if ((S_ISCHR(list->st.st_mode)) ||
 				(S_ISBLK(list->st.st_mode)))
 			g_width.has_cb = 1;
 		g_width.blocks += list->st.st_blocks;

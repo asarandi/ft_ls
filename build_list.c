@@ -6,13 +6,13 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/03 18:26:01 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/03 18:54:03 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/04 03:15:46 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ls.h"
 
-int	get_file_stats(char *path, t_file *file)
+int		get_file_stats(char *path, t_file *file)
 {
 	char	*fullpath;
 	int		result;
@@ -25,61 +25,45 @@ int	get_file_stats(char *path, t_file *file)
 	return (result);
 }
 
-t_file *build_file_list(int ac, char **av)
+t_file	*cmdline_file(char *name)
 {
-	int	i;
-	t_file			*first;
-	t_file			*index;
-	t_file			*new;
+	t_file	*new;
 
-	i = g_opt.last_opt;
-	first = NULL;
-	while (i < ac)
+	if (is_directory(name, 0) == 0)
 	{
-		if (is_directory(av[i]) == 0)
+		new = (t_file*)ft_memalloc(sizeof(t_file));
+		if (new == NULL)
 		{
-			new = (t_file*)ft_memalloc(sizeof(t_file));
-			new->name = ft_strdup(av[i]);
-			if (get_file_stats("", new) == 0)
-			{
-				if (first == NULL)
-				{
-					first = new;
-					index = first;
-				}
-				else
-				{
-					index->next = new;
-					index = index->next;
-				}
-			}
-			else
-			{
-				free(new->name);
-				free(new);
-			}
+			ft_printf(2, "%s: %s\n", g_ls_name, strerror(errno));
+			exit(1);
 		}
-		i++;
+		new->name = ft_strdup(name);
+		if (get_file_stats("", new) != 0)
+		{
+			free(new->name);
+			free(new);
+			return (NULL);
+		}
+		else
+			return (new);
 	}
-	return (first);
+	else
+		return (NULL);
 }
 
-t_file *build_directory_list(int ac, char **av)
+t_file	*build_file_list(int ac, char **av)
 {
-	int	i;
-	t_file			*first;
-	t_file			*index;
-	t_file			*new;
+	int		i;
+	t_file	*first;
+	t_file	*index;
+	t_file	*new;
 
 	i = g_opt.last_opt;
 	first = NULL;
 	while (i < ac)
 	{
-		if (is_directory(av[i]) == 1)
+		if ((new = cmdline_file(av[i])) != NULL)
 		{
-			new = (t_file*)ft_memalloc(sizeof(t_file));
-			new->name = ft_strdup(av[i]);
-			get_file_stats("", new);
 			if (first == NULL)
 			{
 				first = new;
@@ -93,5 +77,49 @@ t_file *build_directory_list(int ac, char **av)
 		}
 		i++;
 	}
+	return (first);
+}
+
+t_file	*cmdline_dir(char *name)
+{
+	t_file	*new;
+
+	new = (t_file*)ft_memalloc(sizeof(t_file));
+	if (new == NULL)
+	{
+		ft_printf(2, "%s: %s\n", g_ls_name, strerror(errno));
+		exit(1);
+	}
+	new->name = ft_strdup(name);
+	get_file_stats("", new);
+	return (new);
+}
+
+t_file	*build_directory_list(int ac, char **av)
+{
+	int		i;
+	t_file	*first;
+	t_file	*index;
+
+	i = g_opt.last_opt;
+	first = NULL;
+	while (i < ac)
+	{
+		if (is_directory(av[i], 0) == 1)
+		{
+			if (first == NULL)
+			{
+				first = cmdline_dir(av[i]);
+				index = first;
+			}
+			else
+			{
+				index->next = cmdline_dir(av[i]);
+				index = index->next;
+			}
+		}
+		i++;
+	}
+	index = NULL;
 	return (first);
 }

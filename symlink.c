@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/03 18:50:10 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/03 18:50:14 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/04 03:48:33 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,4 +32,19 @@ char	*get_symlink_address(char *path, t_file *list)
 	}
 	free(fullpath);
 	return (symlink);
+}
+
+void	print_symlink(t_file *list, char *path)
+{
+	char	*symlink;
+
+	if (S_ISLNK(list->st.st_mode))
+	{
+		symlink = get_symlink_address(path, list);
+		if (symlink != NULL)
+		{
+			ft_printf(1, " -> %s", symlink);
+			free(symlink);
+		}
+	}
 }

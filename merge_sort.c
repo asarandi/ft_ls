@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/02 22:21:06 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/03 18:48:43 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/03 19:45:41 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,9 +79,10 @@ void	sort_list(t_file **list)
 	(*list) = merge_lists(left, right);
 }
 
-void	choose_sort()
+void	choose_sort(void)
 {
 	int (*f)(t_file *f1, t_file *f2);
+
 	f = sort_by_name_asc;
 	if (g_opt.sort == 0)
 		f = g_opt.reverse == 0 ? sort_by_name_asc : sort_by_name_desc;

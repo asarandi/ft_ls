@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 20:05:13 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/04 17:03:39 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/05 02:32:22 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,6 +84,10 @@ t_widths			g_width;
 
 char				*g_ls_name;
 
+int					get_row_end(t_file *list, uintmax_t n, uintmax_t nth);
+void				print_tabs(intmax_t name_len);
+void				print_column_item(t_file *list);
+t_file				*get_nth_element(t_file *list, uintmax_t n);
 int					has_symbol(unsigned long st_mode);
 void				get_max_filename_len(t_file *list);
 void				print_columns(t_file *list);

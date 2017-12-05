@@ -6,7 +6,7 @@
 #    By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/11/26 20:09:21 by asarandi          #+#    #+#              #
-#    Updated: 2017/12/04 16:58:33 by asarandi         ###   ########.fr        #
+#    Updated: 2017/12/05 02:32:59 by asarandi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,6 +16,7 @@ CFLAGS	= -Wall -Werror -Wextra -O3
 SRC		=	build_list.c \
 			clear_structs.c \
 			columns.c \
+			columns_util.c \
 			compare_files1.c \
 			compare_files2.c \
 			compare_files3.c \
@@ -46,7 +47,7 @@ $(NAME):
 	$(info $(NAME):		building executable)
 	@$(CC) $(CFLAGS) $(OBJ) $(LIB) -o $(NAME)
 
-debug: fclean
+debug_all: fclean
 	@make debug -C libft
 	@make debug -C ft_printf
 	$(info $(NAME):		compiling debug .o files)
@@ -54,11 +55,15 @@ debug: fclean
 	$(info $(NAME):		building debug executable)
 	@$(CC) -g $(OBJ) $(LIB) -o debug
 
-build:
-	$(info $(NAME):	building executable)
-	@rm -rf $(OBJ) $(NAME)
-	@$(CC) $(CFLAGS) -c $(SRC)
-	@$(CC) $(CFLAGS) $(OBJ) $(LIB) -o $(NAME)
+debug:
+	@rm -rf $(OBJ)
+	@rm -rf debug
+	@$(CC) -g -c $(SRC)
+	@$(CC) -g $(OBJ) $(LIB) -o debug
+
+dc:
+	rm -rf $(OBJ)
+	rm -rf ft_ls debug
 
 clean:
 	@make clean -C libft

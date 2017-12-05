@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/03 21:56:01 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/04 16:42:29 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/05 02:42:58 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,14 +104,12 @@ int	parse_options4(char c)
 	else if (c == 'g')
 	{
 		g_opt.hide_owner = 1;
-		g_opt.long_list = 1;
-		return (1);
+		return (parse_options1('l'));
 	}
 	else if (c == 'o')
 	{
 		g_opt.hide_group = 1;
-		g_opt.long_list = 1;
-		return (1);
+		return (parse_options1('l'));
 	}
 	return (parse_options5(c));
 }

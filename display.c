@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/03 18:27:58 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/04 03:45:41 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/04 16:55:45 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,7 @@ int		display_files(int ac, char **av)
 	if (list != NULL)
 	{
 		sort_list(&list);
-		if (g_opt.long_list == 0)
-			print_basic(list);
-		else
-			print_long("", list);
+		choose_print("", list);
 		destroy_list(list);
 		return (1);
 	}

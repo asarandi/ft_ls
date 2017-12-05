@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/03 18:24:15 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/03 19:39:57 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/04 16:34:36 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,9 @@
 
 void	clear_options(void)
 {
+	g_opt.across = 0;
+	g_opt.column = 0;
+	g_opt.basic = 0;
 	g_opt.long_list = 0;
 	g_opt.recursive = 0;
 	g_opt.reverse = 0;
@@ -41,4 +44,5 @@ void	clear_widths(void)
 	g_width.size = 0;
 	g_width.blocks = 0;
 	g_width.has_cb = 0;
+	g_width.name = 0;
 }

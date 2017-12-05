@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 20:05:13 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/04 04:17:11 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/04 17:03:39 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,8 @@
 # include "ft_printf/libftprintf.h"
 # include <sys/acl.h>
 
+# define TAB_SIZE 8
+
 typedef uintmax_t	t_x;
 
 typedef struct		s_file
@@ -43,6 +45,9 @@ typedef struct		s_file
 
 typedef struct		s_options
 {
+	int				across;
+	int				column;
+	int				basic;
 	int				long_list;
 	int				recursive;
 	int				reverse;
@@ -71,6 +76,7 @@ typedef struct		s_widths
 	uintmax_t		size;
 	uintmax_t		blocks;
 	uintmax_t		has_cb;
+	uintmax_t		name;
 }					t_widths;
 
 t_options			g_opt;
@@ -78,6 +84,11 @@ t_widths			g_width;
 
 char				*g_ls_name;
 
+int					has_symbol(unsigned long st_mode);
+void				get_max_filename_len(t_file *list);
+void				print_columns(t_file *list);
+void				print_across(t_file *list);
+void				choose_print(char *path, t_file *list);
 char				*get_symlink_address(char *path, t_file *list);
 char				*make_time_string(struct timespec ts);
 int					check_all_options(char c);

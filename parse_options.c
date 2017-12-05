@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/03 21:56:01 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/03 22:55:53 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/04 16:42:29 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,11 +17,9 @@ int	parse_options1(char c)
 	if (c == 'l')
 	{
 		g_opt.long_list = 1;
-		return (1);
-	}
-	else if (c == '1')
-	{
-		g_opt.long_list = 0;
+		g_opt.basic = 0;
+		g_opt.column = 0;
+		g_opt.across = 0;
 		return (1);
 	}
 	else if (c == 'R')

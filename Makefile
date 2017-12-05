@@ -6,7 +6,7 @@
 #    By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/11/26 20:09:21 by asarandi          #+#    #+#              #
-#    Updated: 2017/12/04 04:02:20 by asarandi         ###   ########.fr        #
+#    Updated: 2017/12/04 16:58:33 by asarandi         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,6 +15,7 @@ CC		= gcc
 CFLAGS	= -Wall -Werror -Wextra -O3
 SRC		=	build_list.c \
 			clear_structs.c \
+			columns.c \
 			compare_files1.c \
 			compare_files2.c \
 			compare_files3.c \

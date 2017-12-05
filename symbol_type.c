@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/11/25 20:02:16 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/02 22:53:18 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/04 17:12:56 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,31 @@ void	print_entry_type(unsigned long st_mode)
 		write(1, "s", 1);
 	else
 		write(1, "?", 1);
+}
+
+int		has_symbol(unsigned long st_mode)
+{
+	if (g_opt.slash == 1)
+	{
+		if (S_ISDIR(st_mode))
+			return (1);
+	}
+	if (g_opt.symbol == 1)
+	{
+		if (S_ISDIR(st_mode))
+			return (1);
+		else if (S_ISFIFO(st_mode))
+			return (1);
+		else if (S_ISLNK(st_mode))
+			return (1);
+		else if (S_ISSOCK(st_mode))
+			return (1);
+		else if (S_ISWHT(st_mode))
+			return (1);
+		else if (st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
+			return (1);
+	}
+	return (0);
 }
 
 void	print_entry_symbol(unsigned long st_mode)

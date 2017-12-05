@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/03 18:29:57 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/03 23:13:51 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/04 17:07:46 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,22 +15,51 @@
 void	illegal_option(char c)
 {
 	ft_printf(2, "%s: illegal option -- %c\n", g_ls_name, c);
-	ft_printf(2, "usage: %s [-AacFfglopRrSTtUu1] [file ...]\n", g_ls_name);
+	ft_printf(2, "usage: %s [-AaCcFfglopRrSTtUux1] [file ...]\n", g_ls_name);
 	exit(1);
 }
 
-int		parse_options5(char c)
+int		parse_options6(char c)
 {
 	if (c == 'a')
 	{
 		g_opt.show_dot = 1;
 		return (1);
 	}
+	else if (c == '1')
+	{
+		g_opt.basic = 1;
+		g_opt.long_list = 0;
+		g_opt.across = 0;
+		g_opt.column = 0;
+		return (1);
+	}
 	return (0);
 }
 
+int		parse_options5(char c)
+{
+	if (c == 'x')
+	{
+		g_opt.across = 1;
+		g_opt.long_list = 0;
+		g_opt.column = 0;
+		g_opt.basic = 0;
+		return (1);
+	}
+	else if (c == 'C')
+	{
+		g_opt.column = 1;
+		g_opt.long_list = 0;
+		g_opt.across = 0;
+		g_opt.basic = 0;
+		return (1);
+	}
+	return (parse_options6(c));
+}
+
 /*
-**int	parse_options6(char c)
+**int	parse_options7(char c)
 **{
 **	if (c == 'e')
 **	{

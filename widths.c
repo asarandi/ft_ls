@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/03 14:28:58 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/03 19:43:11 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/04 07:02:30 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,6 +77,7 @@ void	get_directory_widths(t_file *list)
 	clear_widths();
 	while (list)
 	{
+		get_max_filename_len(list);
 		if (list->st.st_nlink > g_width.links)
 			g_width.links = list->st.st_nlink;
 		if (list->st.st_size > (off_t)g_width.size)

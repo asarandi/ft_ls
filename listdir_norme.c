@@ -6,7 +6,7 @@
 /*   By: asarandi <asarandi@student.42.us.org>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/12/04 03:22:19 by asarandi          #+#    #+#             */
-/*   Updated: 2017/12/04 03:47:15 by asarandi         ###   ########.fr       */
+/*   Updated: 2017/12/04 17:00:40 by asarandi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,13 +24,22 @@ void	child_node(t_file **index, t_file *node)
 	(*index) = (*index)->next;
 }
 
+void	choose_print(char *path, t_file *list)
+{
+	if (g_opt.basic == 1)
+		print_basic(list);
+	else if (g_opt.long_list == 1)
+		print_long(path, list);
+	else if (g_opt.across == 1)
+		print_across(list);
+	else
+		print_columns(list);
+}
+
 void	listdir_sortprint(t_file **list, char *path, t_file **start)
 {
 	sort_list(list);
-	if (g_opt.long_list == 0)
-		print_basic(*list);
-	else
-		print_long(path, *list);
+	choose_print(path, *list);
 	(*start) = *list;
 }
 
